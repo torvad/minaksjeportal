@@ -1,0 +1,9 @@
+{
+  "verbose": false,
+  "permissions": {
+    "allow": [
+      "Edit(**.css)",
+      "Edit(**.tsx)"
+    ]
+  }
+}

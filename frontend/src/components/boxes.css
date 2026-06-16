@@ -1,0 +1,375 @@
+/* ── Box container ── */
+.box {
+  min-height: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(6px);
+}
+
+/* ── Header ── */
+.box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.box-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.box-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.box-source {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.box-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.box-updated {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+/* ── Refresh button ── */
+.box-refresh-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.box-refresh-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--box-c1) 20%, transparent);
+  color: var(--box-hover-text);
+  border-color: color-mix(in srgb, var(--box-c1) 40%, transparent);
+}
+
+.box-refresh-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Loading bar ── */
+.box-bar-wrap {
+  position: relative;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+@keyframes box-indeterminate {
+  0%   { left: -40%; width: 40%; }
+  60%  { left: 100%; width: 40%; }
+  100% { left: 100%; width: 0; }
+}
+
+.box-bar-indeterminate {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, var(--box-c1), var(--box-c2));
+  border-radius: 1px;
+  animation: box-indeterminate 1.4s ease infinite;
+}
+
+/* ── Error ── */
+.box-error {
+  padding: 6px 18px;
+  font-size: 0.73rem;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ── Table scroll area ── */
+.box-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.box-table-wrap::-webkit-scrollbar { width: 4px; }
+.box-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+/* ── Table ── */
+.box-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.box-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(13, 20, 35, 0.95);
+}
+
+.box-table thead tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.box-table th {
+  padding: 5px 16px;
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.28);
+  white-space: nowrap;
+}
+
+.box-table th.box-col-value,
+.box-table th.box-col-metric,
+.box-table th.box-col-secondary,
+.box-table th.box-col-pct {
+  text-transform: uppercase;
+  text-align: right;
+}
+
+/* ── Rows ── */
+.box-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.1s;
+}
+
+.box-row:last-child { border-bottom: none; }
+.box-row:hover { background: rgba(255, 255, 255, 0.04); }
+
+.box-table td {
+  padding: 5px 16px;
+  white-space: nowrap;
+}
+
+/* ── Columns ── */
+.box-col-rank {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  width: 28px;
+}
+
+.box-col-stock { width: 100%; }
+
+.box-col-value { text-align: right; }
+
+.box-col-metric,
+.box-col-secondary,
+.box-col-pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #c4cdd9;
+}
+
+/* ── Stock name + ticker ── */
+.box-name {
+  display: block;
+  color: #dde4f0;
+  font-weight: 500;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  text-transform: uppercase;
+}
+
+.box-symbol {
+  display: block;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 0.67rem;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  margin-top: 1px;
+}
+
+/* ── Primary metric cell with proportional bar ── */
+.box-val-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.box-val-num {
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--box-val-color);
+  font-size: 0.82rem;
+}
+
+.box-bar-track {
+  width: 80px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.box-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--box-c1) 60%, transparent),
+    color-mix(in srgb, var(--box-c2) 80%, transparent)
+  );
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* ── Empty state ── */
+.box-empty {
+  text-align: center;
+  padding: 32px 16px !important;
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 0.8rem;
+}
+
+
+.pos { color: #4ade80; }
+.neg { color: #f87171; }
+
+/* ── Screener ── */
+.screener-filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+
+.screener-filter-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 4px 14px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.screener-filter-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.screener-filter-btn.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #a5b4fc;
+}
+
+.screener-filter-btn--growth.active {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fcd34d;
+}
+
+.screener-filter-btn--dividend.active {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+}
+
+.screener-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.82rem;
+}
+
+.screener-box {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
+.screener-criteria {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}
+
+.screener-criterion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.screener-criterion--count {
+  margin-left: auto;
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.screener-crit-label {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+.screener-crit-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #a5b4fc;
+  white-space: nowrap;
+}
+
+.screener-col-exch {
+  text-align: center;
+  width: 64px;
+}
+
+.screener-exch-badge {
+  display: inline-block;
+  font-size: 0.67rem;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid;
+}

@@ -1,0 +1,21 @@
+.App {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 100%);
+  color: white;
+}
+
+/* ── Shared sort styles ── */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.sortable:hover {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.sort-ind {
+  font-size: 0.58rem;
+  margin-left: 3px;
+  opacity: 0.75;
+}
