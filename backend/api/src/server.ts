@@ -35,13 +35,6 @@ async function initOrchestrator() {
       [path.join(__dirname, "../../yahoo-mcp/src/index.ts")]
     );
 
-    console.log("Connecting to fmp-mcp...");
-    await orchestrator.connectServer(
-      "fmp",
-      "tsx",
-      [path.join(__dirname, "../../fmp-mcp/src/index.ts")]
-    );
-
     console.log("✓ All MCP servers connected");
   } catch (error) {
     console.warn("MCP servers unavailable:", error instanceof Error ? error.message : error);
@@ -179,31 +172,6 @@ app.get("/api/yahoo/top-yields", async (_req: Request, res: Response) => {
   }
 });
 
-app.get("/api/fmp/quotes", async (_req: Request, res: Response) => {
-  try {
-    if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });
-    const result = await orchestrator.callTool("fmp.get_fmp_quotes", {});
-    const text = result.content?.[0]?.text;
-    if (!text) return res.status(500).json({ error: "No data returned" });
-    res.json(JSON.parse(text));
-  } catch (error) {
-    console.error("FMP quotes error:", error);
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
-  }
-});
-
-app.get("/api/fmp/top-yields", async (_req: Request, res: Response) => {
-  try {
-    if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });
-    const result = await orchestrator.callTool("fmp.get_top_yields", { count: 10 });
-    const text = result.content?.[0]?.text;
-    if (!text) return res.status(500).json({ error: "No data returned" });
-    res.json(JSON.parse(text));
-  } catch (error) {
-    console.error("FMP top yields error:", error);
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
-  }
-});
 
 app.get("/api/yahoo/top-pe", async (_req: Request, res: Response) => {
   try {

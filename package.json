@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Oslo Børs stock prices via Alpha Vantage and MCP",
   "private": true,
-  "workspaces": ["backend/stock-mcp", "backend/yahoo-mcp", "backend/fmp-mcp", "backend/api", "frontend"],
+  "workspaces": ["backend/stock-mcp", "backend/yahoo-mcp", "backend/api", "frontend"],
   "scripts": {
     "dev:api": "npm run dev -w api",
     "dev:frontend": "npm run dev -w frontend",
