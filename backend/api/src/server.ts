@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { Orchestrator } from "./orchestrator.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 const app = express();
 const PORT = process.env.PORT || 4001;
 
@@ -15,7 +15,7 @@ let orchestrator: Orchestrator | null = null;
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+app.use(express.static(path.join(__dirname, "../../../frontend/dist")));
 
 async function initOrchestrator() {
   try {
