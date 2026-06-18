@@ -41,7 +41,7 @@ export default function TopValuation({ exchange = "OSL" }: { exchange?: string }
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/yahoo/all-valuation?exchange=${exchange}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/yahoo/all-valuation?exchange=${exchange}`);
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       setStocks(data.stocks ?? []);

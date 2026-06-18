@@ -139,7 +139,7 @@ export default function StockDashboard() {
     setYfLoading(true);
     setYfError("");
     try {
-      const res = await fetch(`/api/yahoo/all-quotes?exchange=${exchange}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/yahoo/all-quotes?exchange=${exchange}`);
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       setYfQuotes(data.quotes ?? []);

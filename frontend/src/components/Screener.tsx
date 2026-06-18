@@ -82,7 +82,7 @@ export default function Screener() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/yahoo/screener?type=${type}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/yahoo/screener?type=${type}`);
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       setStocks(data.stocks ?? []);
