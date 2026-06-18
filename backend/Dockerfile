@@ -9,15 +9,11 @@ RUN npm install -g tsx
 COPY api/package.json ./api/
 RUN cd api && npm install --omit=dev
 
-COPY stock-mcp/package.json ./stock-mcp/
-RUN cd stock-mcp && npm install --omit=dev
-
 COPY yahoo-mcp/package.json ./yahoo-mcp/
 RUN cd yahoo-mcp && npm install --omit=dev
 
 # Copy source after deps so code changes don't bust the dep cache
 COPY api/ ./api/
-COPY stock-mcp/ ./stock-mcp/
 COPY yahoo-mcp/ ./yahoo-mcp/
 
 EXPOSE 4001

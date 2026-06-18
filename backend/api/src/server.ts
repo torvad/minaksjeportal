@@ -21,13 +21,6 @@ async function initOrchestrator() {
   try {
     orchestrator = new Orchestrator();
 
-    console.log("Connecting to stock-mcp...");
-    await orchestrator.connectServer(
-      "stock",
-      "tsx",
-      [path.join(__dirname, "../../stock-mcp/src/index.ts")]
-    );
-
     console.log("Connecting to yahoo-mcp...");
     await orchestrator.connectServer(
       "yahoo",
@@ -51,31 +44,6 @@ app.get("/api/tools", (_req: Request, res: Response) => {
   res.json({ tools: orchestrator.listTools() });
 });
 
-app.post("/api/stocks", async (req: Request, res: Response) => {
-  try {
-    if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });
-    const { symbol } = req.body;
-    if (!symbol) return res.status(400).json({ error: "Missing symbol" });
-    const result = await orchestrator.callTool("stock.get_stock_quote", { symbol });
-    const text = result.content?.[0]?.text;
-    if (!text) return res.status(500).json({ error: "No data returned" });
-    res.json(JSON.parse(text));
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
-  }
-});
-
-app.get("/api/oslo-stocks", async (_req: Request, res: Response) => {
-  try {
-    if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });
-    const result = await orchestrator.callTool("stock.list_oslo_stocks", {});
-    const text = result.content?.[0]?.text;
-    if (!text) return res.status(500).json({ error: "No data returned" });
-    res.json(JSON.parse(text));
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
-  }
-});
 
 app.get("/api/yahoo/all-quotes", async (req: Request, res: Response) => {
   try {
