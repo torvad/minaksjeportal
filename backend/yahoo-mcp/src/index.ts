@@ -51,6 +51,17 @@ async function refreshSession(): Promise<void> {
   return sessionRefreshPromise;
 }
 
+// Yahoo sometimes returns 200 with an HTML consent/captcha page. Treat that as auth failure.
+async function safeJson(res: globalThis.Response): Promise<Record<string, any>> {
+  const text = await res.text();
+  if (text.trimStart().startsWith('<')) {
+    sessionCrumb = "";
+    sessionCookie = "";
+    throw new Error(`Yahoo returned HTML instead of JSON (status ${res.status}) — session blocked or consent required`);
+  }
+  return JSON.parse(text) as Record<string, any>;
+}
+
 async function _doRefreshSession(): Promise<void> {
   // Step 1: obtain a session cookie from Yahoo consent endpoint
   const sessRes = await fetch("https://fc.yahoo.com", {
@@ -108,12 +119,12 @@ async function fetchYahooQuotes(): Promise<any[]> {
       }
     );
     if (!retry.ok) throw new Error(`Yahoo Finance ${retry.status} after session refresh`);
-    const data = await retry.json() as Record<string, any>;
+    const data = await safeJson(retry);
     return data?.quoteResponse?.result ?? [];
   }
 
   if (!res.ok) throw new Error(`Yahoo Finance returned ${res.status}: ${res.statusText}`);
-  const data = await res.json() as Record<string, any>;
+  const data = await safeJson(res);
   return data?.quoteResponse?.result ?? [];
 }
 
@@ -165,7 +176,7 @@ async function fetchTopVolume(count = 15, exchange = "OSL"): Promise<any[]> {
     return [];
   }
 
-  const data = await res.json() as Record<string, any>;
+  const data = await safeJson(res);
   const quotes: any[] = data?.finance?.result?.[0]?.quotes ?? [];
 
   return quotes
@@ -218,7 +229,7 @@ async function fetchTopYields(count = 10, exchange = "OSL"): Promise<any[]> {
     return [];
   }
 
-  const data = await res.json() as Record<string, any>;
+  const data = await safeJson(res);
   return data?.finance?.result?.[0]?.quotes ?? [];
 }
 
@@ -266,7 +277,7 @@ async function fetchLargeCapStocks(exchange = "OSL"): Promise<any[]> {
       });
     }
     if (!res.ok) return null;
-    const data = await res.json() as Record<string, any>;
+    const data = await safeJson(res);
     return (data?.finance?.result?.[0]?.quotes ?? []) as any[];
   };
 
@@ -311,7 +322,7 @@ async function fetchOsloFinancials(limit = 40, exchange = "OSL"): Promise<any[]>
         });
       }
       if (!r.ok) return null;
-      const d = await r.json() as Record<string, any>;
+      const d = await safeJson(r);
       const fd = d?.quoteSummary?.result?.[0]?.financialData;
       if (!fd) return null;
       const raw = screened.find((q: any) => q.symbol === symbol);
@@ -356,7 +367,7 @@ async function fetchNordicScreener(type: ScreenerType = "quality"): Promise<any[
       let r = await fetch(mkUrl(), { headers: { "User-Agent": BROWSER_UA, "Cookie": sessionCookie, "Accept": "application/json" } });
       if (r.status === 401) { await refreshSession(); r = await fetch(mkUrl(), { headers: { "User-Agent": BROWSER_UA, "Cookie": sessionCookie, "Accept": "application/json" } }); }
       if (!r.ok) return null;
-      const d = await r.json() as Record<string, any>;
+      const d = await safeJson(r);
       const fd  = d?.quoteSummary?.result?.[0]?.financialData;
       const ks  = d?.quoteSummary?.result?.[0]?.defaultKeyStatistics;
       const sd  = d?.quoteSummary?.result?.[0]?.summaryDetail;
@@ -664,7 +675,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       let qRes = await doQuoteFetch(syms, sessionCrumb, sessionCookie);
       if (qRes.status === 401) { await refreshSession(); qRes = await doQuoteFetch(syms, sessionCrumb, sessionCookie); }
       if (!qRes.ok) { console.error(`[PS] quote fetch ${qRes.status}`); continue; }
-      const qData = await qRes.json() as Record<string, any>;
+      const qData = await safeJson(qRes);
       quotes.push(...(qData?.quoteResponse?.result ?? []));
     }
 
