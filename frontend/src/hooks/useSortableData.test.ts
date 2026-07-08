@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { useSortableData } from './useSortableData';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 
 describe('useSortableData', () => {
   const mockData = [
