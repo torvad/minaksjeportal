@@ -115,6 +115,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
@@ -184,7 +186,16 @@
   width: 28px;
 }
 
-.box-col-stock { width: 100%; }
+.box-col-stock {
+  width: 100%;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #141c2b;
+}
+
+.box-row:hover .box-col-stock { background: #1e2733; }
+thead .box-col-stock { z-index: 6; }
 
 .box-col-value { text-align: right; }
 
@@ -372,4 +383,19 @@
   padding: 2px 7px;
   border-radius: 4px;
   border: 1px solid;
+}
+
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .box-table th,
+  .box-table td {
+    padding: 5px 10px;
+  }
+
+  .box-name { font-size: 0.78rem; }
+  .box-symbol { font-size: 0.63rem; }
+
+  .box-col-stock {
+    box-shadow: 4px 0 6px -4px rgba(0, 0, 0, 0.4);
+  }
 }
