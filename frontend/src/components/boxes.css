@@ -229,6 +229,11 @@ thead .box-col-stock { z-index: 6; }
   margin-top: 1px;
 }
 
+.box-flag {
+  font-size: 0.75em;
+  margin-right: 3px;
+}
+
 /* ── Primary metric cell with proportional bar ── */
 .box-val-cell {
   display: flex;
@@ -387,15 +392,35 @@ thead .box-col-stock { z-index: 6; }
 
 /* ── Mobile ── */
 @media (max-width: 700px) {
+  .box-table {
+    table-layout: fixed;
+  }
+
   .box-table th,
   .box-table td {
-    padding: 5px 10px;
+    padding: 5px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .box-name { font-size: 0.78rem; }
-  .box-symbol { font-size: 0.63rem; }
+  .box-name { font-size: 0.76rem; }
+  .box-symbol { font-size: 0.62rem; }
 
   .box-col-stock {
+    width: 82px;
+    max-width: 82px;
+    padding-left: 10px;
     box-shadow: 4px 0 6px -4px rgba(0, 0, 0, 0.4);
   }
+
+  .box-col-metric,
+  .box-col-secondary,
+  .box-col-pct,
+  .box-col-value {
+    width: 58px;
+  }
+
+  .box-bar-track { width: 36px; }
+
+  .screener-col-exch { width: 46px; }
 }

@@ -192,7 +192,7 @@ export default function StockDashboard() {
             <Screener />
           </div>
         ) : (
-          <div className="panels-grid">
+          <div className="panels-grid panels-grid--exchange">
             <SourcePanel
               title="Yahoo Finance" source={`${activeLabel} · finance.yahoo.com`}
               quotes={yfQuotes} loading={yfLoading}

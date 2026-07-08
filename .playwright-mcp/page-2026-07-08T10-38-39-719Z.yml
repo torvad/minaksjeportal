@@ -1,0 +1,69 @@
+- generic [ref=f8e4]:
+  - banner [ref=f8e5]:
+    - heading "Oslo" [level=1] [ref=f8e7]
+    - navigation [ref=f8e8]:
+      - button "Screener" [ref=f8e9] [cursor=pointer]
+      - button "Oslo" [ref=f8e10] [cursor=pointer]
+      - button "Stockholm" [ref=f8e11] [cursor=pointer]
+      - button "København" [ref=f8e12] [cursor=pointer]
+      - button "Helsinki" [ref=f8e13] [cursor=pointer]
+      - button "Reykjavik" [ref=f8e14] [cursor=pointer]
+  - generic [ref=f8e16]:
+    - generic [ref=f8e17]:
+      - generic [ref=f8e18]:
+        - generic [ref=f8e19]:
+          - generic [ref=f8e20]: Yahoo Finance
+          - generic [ref=f8e21]: Oslo · finance.yahoo.com
+        - button "↻" [disabled] [ref=f8e23]
+      - table [ref=f8e27]:
+        - rowgroup [ref=f8e28]:
+          - row "Aksje Kurs Endring % Volum" [ref=f8e29]:
+            - columnheader "Aksje" [ref=f8e30] [cursor=pointer]: Aksje
+            - columnheader "Kurs" [ref=f8e31] [cursor=pointer]: Kurs
+            - columnheader "Endring %" [ref=f8e32] [cursor=pointer]: Endring %
+            - columnheader "Volum" [ref=f8e33] [cursor=pointer]: Volum
+        - rowgroup
+    - generic [ref=f8e34]:
+      - generic [ref=f8e35]:
+        - generic [ref=f8e36]:
+          - generic [ref=f8e37]: Høyest omsetning i dag
+          - generic [ref=f8e38]: Oslo · Yahoo Finance
+        - button "↻" [disabled] [ref=f8e40]
+      - table [ref=f8e44]:
+        - rowgroup [ref=f8e45]:
+          - row "Aksje Omsetning ▼ Kurs Endring %" [ref=f8e46]:
+            - columnheader "Aksje" [ref=f8e47] [cursor=pointer]: Aksje
+            - columnheader "Omsetning ▼" [ref=f8e48] [cursor=pointer]
+            - columnheader "Kurs" [ref=f8e49] [cursor=pointer]: Kurs
+            - columnheader "Endring %" [ref=f8e50] [cursor=pointer]: Endring %
+        - rowgroup
+    - generic [ref=f8e51]:
+      - generic [ref=f8e52]:
+        - generic [ref=f8e53]:
+          - generic [ref=f8e54]: Verdsettelse
+          - generic [ref=f8e55]: Oslo · Yahoo Finance
+        - button "↻" [disabled] [ref=f8e57]
+      - table [ref=f8e61]:
+        - rowgroup [ref=f8e62]:
+          - row "Aksje P/E ▲ P/B Utbytte Endring %" [ref=f8e63]:
+            - columnheader "Aksje" [ref=f8e64] [cursor=pointer]: Aksje
+            - columnheader "P/E ▲" [ref=f8e65] [cursor=pointer]
+            - columnheader "P/B" [ref=f8e66] [cursor=pointer]: P/B
+            - columnheader "Utbytte" [ref=f8e67] [cursor=pointer]: Utbytte
+            - columnheader "Endring %" [ref=f8e68] [cursor=pointer]: Endring %
+        - rowgroup
+    - generic [ref=f8e69]:
+      - generic [ref=f8e70]:
+        - generic [ref=f8e71]:
+          - generic [ref=f8e72]: Finansielle nøkkeltall
+          - generic [ref=f8e73]: Oslo · Yahoo Finance
+        - button "↻" [disabled] [ref=f8e75]
+      - table [ref=f8e79]:
+        - rowgroup [ref=f8e80]:
+          - row "Aksje Omsetn. vekst ▼ Resultat vekst Gjeld/EK Total gjeld" [ref=f8e81]:
+            - columnheader "Aksje" [ref=f8e82] [cursor=pointer]: Aksje
+            - columnheader "Omsetn. vekst ▼" [ref=f8e83] [cursor=pointer]
+            - columnheader "Resultat vekst" [ref=f8e84] [cursor=pointer]: Resultat vekst
+            - columnheader "Gjeld/EK" [ref=f8e85] [cursor=pointer]: Gjeld/EK
+            - columnheader "Total gjeld" [ref=f8e86] [cursor=pointer]: Total gjeld
+        - rowgroup

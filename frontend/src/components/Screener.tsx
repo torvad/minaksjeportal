@@ -25,6 +25,14 @@ const EXCHANGE_COLOR: Record<string, string> = {
   OSL: "#6366f1", STO: "#0ea5e9", CSE: "#f59e0b", HEL: "#10b981", ICE: "#8b5cf6",
 };
 
+const EXCHANGE_FLAG: Record<string, string> = {
+  OSL: "🇳🇴", STO: "🇸🇪", CSE: "🇩🇰", HEL: "🇫🇮", ICE: "🇮🇸",
+};
+
+const EXCHANGE_COUNTRY: Record<string, string> = {
+  OSL: "Norge", STO: "Sverige", CSE: "Danmark", HEL: "Finland", ICE: "Island",
+};
+
 const ACCENT = {
   "--box-c1": "#6366f1",
   "--box-c2": "#818cf8",
@@ -225,7 +233,10 @@ export default function Screener() {
                   <tr key={s.symbol} className="box-row">
                     <td className="box-col-stock">
                       <span className="box-name" title={s.name}>{s.name}</span>
-                      <span className="box-symbol">{s.symbol}</span>
+                      <span className="box-symbol">
+                        <span className="box-flag" title={EXCHANGE_COUNTRY[s.exchange] ?? s.exchange}>{EXCHANGE_FLAG[s.exchange] ?? ""}</span>
+                        {s.symbol}
+                      </span>
                     </td>
                     <td className="screener-col-exch">
                       <span className="screener-exch-badge" style={{ background: exchColor + "33", color: exchColor, borderColor: exchColor + "66" }}>
