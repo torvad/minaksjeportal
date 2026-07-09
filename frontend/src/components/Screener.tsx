@@ -65,9 +65,6 @@ const CRITERIA: Record<ScreenerType, Array<{ label: string; value: string }>> = 
   ],
 };
 
-function fmtTime(d: Date) {
-  return d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
 function fmtPct(v: number | null) { return v === null ? "—" : (v * 100).toFixed(1) + "%"; }
 function fmtBig(v: number | null) {
   if (v === null) return "—";
@@ -82,7 +79,6 @@ export default function Screener() {
   const [stocks, setStocks] = useState<ScreenerStock[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const { sorted, handleSort, ind } = useSortableData(stocks, "revenueGrowth", false);
 
@@ -94,7 +90,6 @@ export default function Screener() {
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       setStocks(data.stocks ?? []);
-      setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch");
     } finally {
@@ -116,21 +111,6 @@ export default function Screener() {
 
   return (
     <div className="box screener-box" style={ACCENT}>
-      <div className="box-header">
-        <div className="box-header-left">
-          <span className="box-title">Nordisk Aksje-Screener</span>
-          <span className="box-source">OSL · STO · CSE · HEL · ICE</span>
-        </div>
-        <div className="box-header-right">
-          {lastUpdated && !loading && (
-            <span className="box-updated">{fmtTime(lastUpdated)}</span>
-          )}
-          {screenerType && (
-            <button className="box-refresh-btn" onClick={() => fetchAll(screenerType)} disabled={loading}>↻</button>
-          )}
-        </div>
-      </div>
-
       <div className="screener-filter-bar">
         <button
           className={`screener-filter-btn${screenerType === "quality" ? " active" : ""}`}
