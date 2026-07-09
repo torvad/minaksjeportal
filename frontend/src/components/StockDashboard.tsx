@@ -163,8 +163,7 @@ export default function StockDashboard() {
     <div className="dashboard">
       <header className="dashboard-header">
         <div className="header-left">
-          <h1 className="dashboard-title">{activeLabel}</h1>
-          <span className="header-subtitle">Live markedsdata</span>
+          <h1 className="dashboard-title">Minaksjeportal</h1>
         </div>
         <nav className="exchange-tabs">
           <button
