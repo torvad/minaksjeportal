@@ -33,7 +33,7 @@ function fmtTime(d: Date): string {
 
 function fmtReturn(v: number | null | undefined): string {
   if (v === null || v === undefined || isNaN(v)) return "—";
-  return (v >= 0 ? "+" : "") + v.toFixed(1) + "%";
+  return (v >= 0 ? "+" : "") + Math.round(v) + "%";
 }
 
 export default function Favorites() {
@@ -109,7 +109,7 @@ export default function Favorites() {
       {error && <div className="box-error">{error}</div>}
 
       <div className="box-table-wrap">
-        <table className="box-table">
+        <table className="box-table favorites-table">
           <thead>
             <tr>
               <th className="box-col-fav" />
@@ -120,7 +120,9 @@ export default function Favorites() {
                 Kurs<span className="sort-ind">{ind("price")}</span>
               </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("changePercent")}>
-                Endring %<span className="sort-ind">{ind("changePercent")}</span>
+                <span className="th-label-full">Endring %</span>
+                <span className="th-label-short">Endr</span>
+                <span className="sort-ind">{ind("changePercent")}</span>
               </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("oneYear")}>
                 1 år<span className="sort-ind">{ind("oneYear")}</span>

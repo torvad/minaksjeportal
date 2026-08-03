@@ -82,7 +82,7 @@ test("the favorites tab is visitable and lists followed stocks", async ({ page }
   await expect(page.getByText(/Ingen favoritter/i)).not.toBeVisible();
 
   // 1y/3y/5y trailing return columns are populated from the historical-returns endpoint.
-  await expect(favoritesRow).toContainText("+12.3%");
-  await expect(favoritesRow).toContainText("-4.5%");
-  await expect(favoritesRow).toContainText("+30.0%");
+  await expect(favoritesRow).toContainText("+12%");
+  await expect(favoritesRow).toContainText("-4%");
+  await expect(favoritesRow).toContainText("+30%");
 });

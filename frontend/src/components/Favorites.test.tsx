@@ -66,9 +66,9 @@ describe('Favorites', () => {
 
     expect(await screen.findByText('EQNR.OL')).toBeInTheDocument();
     expect(screen.getByText('300.00')).toBeInTheDocument();
-    expect(screen.getByText('+12.3%')).toBeInTheDocument();
-    expect(screen.getByText('-4.5%')).toBeInTheDocument();
-    expect(screen.getByText('+30.0%')).toBeInTheDocument();
+    expect(screen.getByText('+12%')).toBeInTheDocument();
+    expect(screen.getByText('-4%')).toBeInTheDocument();
+    expect(screen.getByText('+30%')).toBeInTheDocument();
   });
 
   it('shows a dash for periods with no historical data', async () => {
@@ -77,7 +77,7 @@ describe('Favorites', () => {
 
     renderFavorites();
 
-    expect(await screen.findByText('+5.0%')).toBeInTheDocument();
+    expect(await screen.findByText('+5%')).toBeInTheDocument();
     expect(screen.getAllByText('—')).toHaveLength(2);
   });
 

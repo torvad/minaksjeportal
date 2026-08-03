@@ -234,6 +234,9 @@ thead .box-col-stock { z-index: 6; }
   margin-right: 3px;
 }
 
+/* Short header labels only shown on narrow screens (see @media block below) */
+.th-label-short { display: none; }
+
 /* ── Favorite star toggle ── */
 .favorite-star {
   background: none;
@@ -449,4 +452,22 @@ thead .box-col-stock { z-index: 6; }
   .box-bar-track { width: 36px; }
 
   .screener-col-exch { width: 46px; }
+
+  /* Favorites has more columns (name, price, change, 1y/3y/5y) than other
+     panels, so it gets its own tighter widths to keep stock names legible
+     while still leaving room for 3-digit long-term returns. */
+  .favorites-table .box-col-stock {
+    width: 86px;
+    max-width: 86px;
+  }
+
+  .favorites-table .box-col-secondary,
+  .favorites-table .box-col-pct {
+    width: 50px;
+    padding: 5px 3px;
+    font-size: 0.72rem;
+  }
+
+  .favorites-table .th-label-full { display: none; }
+  .favorites-table .th-label-short { display: inline; }
 }
