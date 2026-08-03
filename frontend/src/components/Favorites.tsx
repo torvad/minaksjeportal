@@ -10,7 +10,6 @@ interface FavoriteQuote {
   price: number;
   change: number;
   changePercent: number;
-  volume: number;
   previousClose: number;
   oneYear: number | null;
   threeYear: number | null;
@@ -26,13 +25,6 @@ const ACCENT = {
 
 function fmt2(v: number): string {
   return isNaN(v) ? "—" : v.toFixed(2);
-}
-
-function fmtVol(v: number): string {
-  if (!v || isNaN(v)) return "—";
-  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
-  if (v >= 1_000) return (v / 1_000).toFixed(0) + "k";
-  return v.toString();
 }
 
 function fmtTime(d: Date): string {
@@ -130,9 +122,6 @@ export default function Favorites() {
               <th className="box-col-pct sortable" onClick={() => handleSort("changePercent")}>
                 Endring %<span className="sort-ind">{ind("changePercent")}</span>
               </th>
-              <th className="box-col-secondary sortable" onClick={() => handleSort("volume")}>
-                Volum<span className="sort-ind">{ind("volume")}</span>
-              </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("oneYear")}>
                 1 år<span className="sort-ind">{ind("oneYear")}</span>
               </th>
@@ -147,14 +136,14 @@ export default function Favorites() {
           <tbody>
             {favorites.length === 0 && (
               <tr>
-                <td colSpan={8} className="box-empty">
+                <td colSpan={7} className="box-empty">
                   Ingen favoritter ennå. Klikk på stjernen ved en aksje for å følge den.
                 </td>
               </tr>
             )}
             {favorites.length > 0 && sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={8} className="box-empty">
+                <td colSpan={7} className="box-empty">
                   {error ? "Klarte ikke hente data." : "Ingen data."}
                 </td>
               </tr>
@@ -174,7 +163,6 @@ export default function Favorites() {
                   <td className={`box-col-pct ${pos ? "pos" : "neg"}`}>
                     {pos ? "+" : ""}{isNaN(q.changePercent) ? "—" : q.changePercent.toFixed(2)}%
                   </td>
-                  <td className="box-col-secondary">{fmtVol(q.volume)}</td>
                   <td className={`box-col-pct ${q.oneYear !== null && q.oneYear >= 0 ? "pos" : q.oneYear !== null ? "neg" : ""}`}>
                     {fmtReturn(q.oneYear)}
                   </td>
