@@ -9,7 +9,7 @@
     "dev:frontend": "npm run dev -w frontend",
     "dev": "npm run dev:api & npm run dev:frontend",
     "build": "npm run build -w frontend",
-    "deploy:backend": "cd backend && fly deploy",
+    "deploy:backend": "cd backend && flyctl deploy",
     "deploy:frontend": "npm run deploy -w frontend",
     "deploy": "npm run deploy:backend && npm run deploy:frontend",
     "test:backend": "npm run test -w api",

@@ -70,6 +70,21 @@ function createTestApp(): Application {
     }
   });
 
+  app.get('/api/yahoo/historical-returns', async (req, res) => {
+    try {
+      if (!mockOrchestrator) return res.status(503).json({ error: 'Orchestrator not initialized' });
+      const symbolsParam = (req.query.symbols as string) || '';
+      const symbols = symbolsParam.split(',').map((s) => s.trim()).filter(Boolean);
+      if (symbols.length === 0) return res.json({ returns: [], fetchedAt: Date.now() });
+      const result = await mockOrchestrator.callTool('yahoo.get_historical_returns', { symbols });
+      const text = result?.content?.[0]?.text;
+      if (!text) return res.status(500).json({ error: 'No data returned' });
+      res.json(JSON.parse(text));
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   return app;
 }
 
@@ -259,6 +274,70 @@ describe('API Routes', () => {
       mockOrchestrator.callTool.mockRejectedValue(new Error('Yahoo unreachable'));
 
       const res = await request(app).get('/api/yahoo/quotes-by-symbols?symbols=EQNR.OL');
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Yahoo unreachable');
+    });
+  });
+
+  describe('Historical Returns Endpoint', () => {
+    it('GET /api/yahoo/historical-returns fetches 1/3/5-year returns for the given symbols', async () => {
+      mockOrchestrator.callTool.mockResolvedValue({
+        content: [{
+          text: JSON.stringify({
+            returns: [
+              { symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30 },
+            ],
+            fetchedAt: 123,
+          }),
+        }],
+      });
+
+      const res = await request(app).get('/api/yahoo/historical-returns?symbols=EQNR.OL');
+
+      expect(res.status).toBe(200);
+      expect(res.body.returns).toHaveLength(1);
+      expect(res.body.returns[0]).toEqual({ symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30 });
+      expect(mockOrchestrator.callTool).toHaveBeenCalledWith(
+        'yahoo.get_historical_returns',
+        { symbols: ['EQNR.OL'] }
+      );
+    });
+
+    it('splits a comma-separated symbols list and trims whitespace', async () => {
+      mockOrchestrator.callTool.mockResolvedValue({
+        content: [{ text: JSON.stringify({ returns: [], fetchedAt: 1 }) }],
+      });
+
+      await request(app).get('/api/yahoo/historical-returns?symbols=EQNR.OL, DNB.OL ,TEL.OL');
+
+      expect(mockOrchestrator.callTool).toHaveBeenCalledWith(
+        'yahoo.get_historical_returns',
+        { symbols: ['EQNR.OL', 'DNB.OL', 'TEL.OL'] }
+      );
+    });
+
+    it('returns an empty list without calling the orchestrator when no symbols are given', async () => {
+      const res = await request(app).get('/api/yahoo/historical-returns');
+
+      expect(res.status).toBe(200);
+      expect(res.body.returns).toEqual([]);
+      expect(mockOrchestrator.callTool).not.toHaveBeenCalled();
+    });
+
+    it('returns 500 when the orchestrator returns no data', async () => {
+      mockOrchestrator.callTool.mockResolvedValue({ content: [{ text: null }] });
+
+      const res = await request(app).get('/api/yahoo/historical-returns?symbols=EQNR.OL');
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('No data returned');
+    });
+
+    it('returns 500 when the orchestrator call throws', async () => {
+      mockOrchestrator.callTool.mockRejectedValue(new Error('Yahoo unreachable'));
+
+      const res = await request(app).get('/api/yahoo/historical-returns?symbols=EQNR.OL');
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Yahoo unreachable');

@@ -132,6 +132,83 @@ async function fetchYahooQuotes(): Promise<any[]> {
   return fetchQuotesForSymbols(OSLO_STOCKS.map(s => s.symbol));
 }
 
+interface HistoricalReturn {
+  symbol: string;
+  oneYear: number | null;
+  threeYear: number | null;
+  fiveYear: number | null;
+}
+
+const SECONDS_PER_DAY = 24 * 60 * 60;
+
+async function fetchHistoricalReturns(symbolList: string[]): Promise<HistoricalReturn[]> {
+  if (!sessionCrumb) await refreshSession();
+
+  const fetchOne = async (symbol: string): Promise<HistoricalReturn> => {
+    const empty = { symbol, oneYear: null, threeYear: null, fiveYear: null };
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5y&interval=1wk`;
+
+    const doFetch = () => fetch(url, {
+      headers: {
+        "User-Agent": BROWSER_UA,
+        "Cookie": sessionCookie,
+        "Accept": "application/json, */*",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    });
+
+    let res: globalThis.Response;
+    try {
+      res = await doFetch();
+      if (res.status === 401) { await refreshSession(); res = await doFetch(); }
+    } catch {
+      return empty;
+    }
+    if (!res.ok) return empty;
+
+    let data: Record<string, any>;
+    try { data = await safeJson(res); } catch { return empty; }
+
+    const result = data?.chart?.result?.[0];
+    const timestamps: number[] = result?.timestamp ?? [];
+    const closes: Array<number | null> = result?.indicators?.quote?.[0]?.close ?? [];
+    if (timestamps.length === 0 || closes.length === 0) return empty;
+
+    let latestIdx = closes.length - 1;
+    while (latestIdx >= 0 && closes[latestIdx] == null) latestIdx--;
+    if (latestIdx < 0) return empty;
+    const latestClose = closes[latestIdx] as number;
+    const latestSec = timestamps[latestIdx];
+
+    // Finds the close nearest to `yearsAgo` before the latest known close and derives
+    // a percentage return. Returns null if no data point falls near enough (e.g. the
+    // stock doesn't have that much trading history yet).
+    const returnFor = (yearsAgo: number): number | null => {
+      const targetSec = latestSec - yearsAgo * 365 * SECONDS_PER_DAY;
+      let bestIdx = -1;
+      let bestDiff = Infinity;
+      for (let i = 0; i <= latestIdx; i++) {
+        if (closes[i] == null) continue;
+        const diff = Math.abs(timestamps[i] - targetSec);
+        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+      }
+      if (bestIdx < 0 || bestDiff > 45 * SECONDS_PER_DAY) return null;
+      const pastClose = closes[bestIdx] as number;
+      if (!pastClose) return null;
+      return ((latestClose - pastClose) / pastClose) * 100;
+    };
+
+    return {
+      symbol,
+      oneYear: returnFor(1),
+      threeYear: returnFor(3),
+      fiveYear: returnFor(5),
+    };
+  };
+
+  return Promise.all(symbolList.map(fetchOne));
+}
+
 const server = new Server(
   { name: "yahoo-mcp", version: "0.1.0" },
   { capabilities: { tools: {} } }
@@ -549,6 +626,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
         required: ["symbols"]
       }
+    },
+    {
+      name: "get_historical_returns",
+      description: "Returns trailing 1-year, 3-year and 5-year percentage price return for a list of Yahoo Finance symbols.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          symbols: { type: "array", items: { type: "string" }, description: "Yahoo Finance ticker symbols, e.g. EQNR.OL" }
+        },
+        required: ["symbols"]
+      }
     }
   ]
 }));
@@ -801,6 +889,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }));
     return {
       content: [{ type: "text", text: JSON.stringify({ quotes, fetchedAt: Date.now() }, null, 2) }]
+    };
+  }
+
+  if (name === "get_historical_returns") {
+    const symbols = ((args as any)?.symbols ?? []) as string[];
+    if (symbols.length === 0) {
+      return { content: [{ type: "text", text: JSON.stringify({ returns: [], fetchedAt: Date.now() }, null, 2) }] };
+    }
+    const returns = await fetchHistoricalReturns(symbols);
+    return {
+      content: [{ type: "text", text: JSON.stringify({ returns, fetchedAt: Date.now() }, null, 2) }]
     };
   }
 

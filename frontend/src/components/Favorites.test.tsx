@@ -6,6 +6,9 @@ import { FavoritesProvider, FavoriteStock } from '../context/FavoritesContext';
 
 const STORAGE_KEY = 'minaksjeportal:favorites';
 
+const EQNR_QUOTE = { symbol: 'EQNR.OL', name: 'Equinor', price: 300, change: 1.5, changePercent: 0.5, volume: 12345, previousClose: 298.5 };
+const EQNR_RETURNS = { symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30 };
+
 function seedFavorites(favs: FavoriteStock[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
 }
@@ -16,6 +19,21 @@ function renderFavorites() {
       <Favorites />
     </FavoritesProvider>
   );
+}
+
+/** Mocks global.fetch, routing quotes-by-symbols and historical-returns requests separately. */
+function mockFetch(opts: { quotes?: any[]; returns?: any[]; quotesOk?: boolean; returnsOk?: boolean; reject?: boolean } = {}) {
+  const { quotes = [], returns = [], quotesOk = true, returnsOk = true, reject = false } = opts;
+  global.fetch = vi.fn().mockImplementation((url: string) => {
+    if (reject) return Promise.reject(new Error('Network error'));
+    if (url.includes('/api/yahoo/historical-returns')) {
+      return Promise.resolve({ ok: returnsOk, json: async () => ({ returns }) });
+    }
+    if (url.includes('/api/yahoo/quotes-by-symbols')) {
+      return Promise.resolve({ ok: quotesOk, json: async () => ({ quotes }) });
+    }
+    return Promise.reject(new Error(`Unexpected fetch URL: ${url}`));
+  });
 }
 
 describe('Favorites', () => {
@@ -31,16 +49,9 @@ describe('Favorites', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it('fetches quotes for followed symbols on mount and renders them', async () => {
+  it('fetches quotes and historical returns for followed symbols and renders them', async () => {
     seedFavorites([{ symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' }]);
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        quotes: [
-          { symbol: 'EQNR.OL', name: 'Equinor', price: 300, change: 1.5, changePercent: 0.5, volume: 12345, previousClose: 298.5 },
-        ],
-      }),
-    });
+    mockFetch({ quotes: [EQNR_QUOTE], returns: [EQNR_RETURNS] });
 
     renderFavorites();
 
@@ -48,10 +59,36 @@ describe('Favorites', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/yahoo/quotes-by-symbols?symbols=EQNR.OL')
       );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/yahoo/historical-returns?symbols=EQNR.OL')
+      );
     });
 
     expect(await screen.findByText('EQNR.OL')).toBeInTheDocument();
     expect(screen.getByText('300.00')).toBeInTheDocument();
+    expect(screen.getByText('+12.3%')).toBeInTheDocument();
+    expect(screen.getByText('-4.5%')).toBeInTheDocument();
+    expect(screen.getByText('+30.0%')).toBeInTheDocument();
+  });
+
+  it('shows a dash for periods with no historical data', async () => {
+    seedFavorites([{ symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' }]);
+    mockFetch({ quotes: [EQNR_QUOTE], returns: [{ symbol: 'EQNR.OL', oneYear: 5, threeYear: null, fiveYear: null }] });
+
+    renderFavorites();
+
+    expect(await screen.findByText('+5.0%')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(2);
+  });
+
+  it('still renders quotes when the historical-returns request fails', async () => {
+    seedFavorites([{ symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' }]);
+    mockFetch({ quotes: [EQNR_QUOTE], returnsOk: false });
+
+    renderFavorites();
+
+    expect(await screen.findByText('EQNR.OL')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(3);
   });
 
   it('joins multiple favorite symbols with a comma in the request URL', async () => {
@@ -59,20 +96,23 @@ describe('Favorites', () => {
       { symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' },
       { symbol: 'DNB.OL', name: 'DNB Bank', exchange: 'OSL' },
     ]);
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ quotes: [] }) });
+    mockFetch();
 
     renderFavorites();
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('symbols=EQNR.OL%2CDNB.OL')
+        expect.stringContaining('quotes-by-symbols?symbols=EQNR.OL%2CDNB.OL')
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('historical-returns?symbols=EQNR.OL%2CDNB.OL')
       );
     });
   });
 
   it('shows an error message when the fetch fails', async () => {
     seedFavorites([{ symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' }]);
-    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    mockFetch({ reject: true });
 
     renderFavorites();
 
@@ -81,14 +121,7 @@ describe('Favorites', () => {
 
   it('removes a stock from the list and shows the empty state when its star is unfollowed', async () => {
     seedFavorites([{ symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' }]);
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        quotes: [
-          { symbol: 'EQNR.OL', name: 'Equinor', price: 300, change: 1.5, changePercent: 0.5, volume: 12345, previousClose: 298.5 },
-        ],
-      }),
-    });
+    mockFetch({ quotes: [EQNR_QUOTE], returns: [EQNR_RETURNS] });
 
     renderFavorites();
     expect(await screen.findByText('EQNR.OL')).toBeInTheDocument();
