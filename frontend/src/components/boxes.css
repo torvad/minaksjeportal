@@ -8,6 +8,9 @@
   display: flex;
   flex-direction: column;
   backdrop-filter: blur(6px);
+  /* Lets descendants size table columns off this box's real rendered width
+     (cqi) instead of guessing from the viewport — see .favorites-table below. */
+  container-type: inline-size;
 }
 
 /* ── Header ── */
@@ -454,16 +457,17 @@ thead .box-col-stock { z-index: 6; }
   .screener-col-exch { width: 46px; }
 
   /* Favorites has more columns (name, price, change, 1y/3y/5y) than other
-     panels, so it gets its own tighter widths to keep stock names legible
-     while still leaving room for 3-digit long-term returns. */
+     panels. Column widths use cqi (relative to the .box container's actual
+     rendered width, see container-type on .box) instead of hardcoded px, so
+     the table fits phones of any width rather than one specific viewport. */
   .favorites-table .box-col-stock {
-    width: 86px;
-    max-width: 86px;
+    width: clamp(70px, 23cqi, 112px);
+    max-width: clamp(70px, 23cqi, 112px);
   }
 
   .favorites-table .box-col-secondary,
   .favorites-table .box-col-pct {
-    width: 50px;
+    width: clamp(46px, 13.5cqi, 58px);
     padding: 5px 3px;
     font-size: 0.72rem;
   }
