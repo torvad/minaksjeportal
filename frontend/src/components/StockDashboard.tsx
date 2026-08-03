@@ -5,6 +5,9 @@ import TopVolume from "./TopVolume";
 import TopValuation from "./TopValuation";
 import TopFinancials from "./TopFinancials";
 import Screener from "./Screener";
+import Favorites from "./Favorites";
+import FavoriteStar from "./FavoriteStar";
+import { FavoritesProvider } from "../context/FavoritesContext";
 import { useSortableData } from "../hooks/useSortableData";
 
 interface StockQuote {
@@ -55,9 +58,10 @@ interface PanelProps {
   error: string;
   lastUpdated: Date | null;
   onRefresh: () => void;
+  exchange: string;
 }
 
-function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRefresh }: PanelProps) {
+function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRefresh, exchange }: PanelProps) {
   const { sorted, handleSort, ind } = useSortableData(quotes, "", false);
 
   return (
@@ -82,6 +86,7 @@ function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRef
         <table className="box-table">
           <thead>
             <tr>
+              <th className="box-col-fav" />
               <th className="box-col-stock sortable" onClick={() => handleSort("name")}>
                 Aksje<span className="sort-ind">{ind("name")}</span>
               </th>
@@ -99,7 +104,7 @@ function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRef
           <tbody>
             {sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={4} className="box-empty">
+                <td colSpan={5} className="box-empty">
                   {error ? "Klarte ikke hente data." : "Ingen data."}
                 </td>
               </tr>
@@ -108,6 +113,9 @@ function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRef
               const pos = q.change >= 0;
               return (
                 <tr key={q.symbol} className="box-row">
+                  <td className="box-col-fav">
+                    <FavoriteStar symbol={q.symbol} name={q.name} exchange={exchange} />
+                  </td>
                   <td className="box-col-stock">
                     <span className="box-name">{q.name}</span>
                     <span className="box-symbol">{q.symbol}</span>
@@ -128,7 +136,7 @@ function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRef
 }
 
 export default function StockDashboard() {
-  const [view, setView] = useState<"screener" | "exchange">("exchange");
+  const [view, setView] = useState<"screener" | "exchange" | "favorites">("exchange");
   const [exchange, setExchange] = useState("OSL");
   const [yfQuotes, setYfQuotes] = useState<StockQuote[]>([]);
   const [yfLoading, setYfLoading] = useState(false);
@@ -157,53 +165,68 @@ export default function StockDashboard() {
 
   const activeLabel = view === "screener"
     ? "Screener"
+    : view === "favorites"
+    ? "Favoritter"
     : (EXCHANGES.find(e => e.code === exchange)?.label ?? exchange);
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <div className="header-left">
-          <h1 className="dashboard-title">Minaksjeportal</h1>
-        </div>
-        <nav className="exchange-tabs">
-          <button
-            className={`exchange-tab screener-tab${view === "screener" ? " active" : ""}`}
-            onClick={() => setView("screener")}
-          >
-            Screener
-          </button>
-          <div className="tab-divider" />
-          {EXCHANGES.map(ex => (
+    <FavoritesProvider>
+      <div className="dashboard">
+        <header className="dashboard-header">
+          <div className="header-left">
+            <h1 className="dashboard-title">Minaksjeportal</h1>
+          </div>
+          <nav className="exchange-tabs">
             <button
-              key={ex.code}
-              className={`exchange-tab${view === "exchange" && exchange === ex.code ? " active" : ""}`}
-              onClick={() => { setView("exchange"); setExchange(ex.code); }}
+              className={`exchange-tab favorites-tab${view === "favorites" ? " active" : ""}`}
+              onClick={() => setView("favorites")}
             >
-              {ex.label}
+              ★ Favoritter
             </button>
-          ))}
-        </nav>
-      </header>
+            <div className="tab-divider" />
+            <button
+              className={`exchange-tab screener-tab${view === "screener" ? " active" : ""}`}
+              onClick={() => setView("screener")}
+            >
+              Screener
+            </button>
+            <div className="tab-divider" />
+            {EXCHANGES.map(ex => (
+              <button
+                key={ex.code}
+                className={`exchange-tab${view === "exchange" && exchange === ex.code ? " active" : ""}`}
+                onClick={() => { setView("exchange"); setExchange(ex.code); }}
+              >
+                {ex.label}
+              </button>
+            ))}
+          </nav>
+        </header>
 
-      <div className="dashboard-body">
-        {view === "screener" ? (
-          <div className="panels-grid">
-            <Screener />
-          </div>
-        ) : (
-          <div className="panels-grid panels-grid--exchange">
-            <SourcePanel
-              title="Yahoo Finance" source={`${activeLabel} · finance.yahoo.com`}
-              quotes={yfQuotes} loading={yfLoading}
-              error={yfError} lastUpdated={yfLastUpdated}
-              onRefresh={fetchYahoo}
-            />
-            <TopVolume exchange={exchange} />
-            <TopValuation exchange={exchange} />
-            <TopFinancials exchange={exchange} />
-          </div>
-        )}
+        <div className="dashboard-body">
+          {view === "screener" ? (
+            <div className="panels-grid">
+              <Screener />
+            </div>
+          ) : view === "favorites" ? (
+            <div className="panels-grid">
+              <Favorites />
+            </div>
+          ) : (
+            <div className="panels-grid panels-grid--exchange">
+              <SourcePanel
+                title="Yahoo Finance" source={`${activeLabel} · finance.yahoo.com`}
+                quotes={yfQuotes} loading={yfLoading}
+                error={yfError} lastUpdated={yfLastUpdated}
+                onRefresh={fetchYahoo} exchange={exchange}
+              />
+              <TopVolume exchange={exchange} />
+              <TopValuation exchange={exchange} />
+              <TopFinancials exchange={exchange} />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </FavoritesProvider>
   );
 }

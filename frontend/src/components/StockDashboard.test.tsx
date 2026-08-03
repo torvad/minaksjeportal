@@ -20,7 +20,7 @@ describe('StockDashboard', () => {
 
   it('renders without crashing', () => {
     render(<StockDashboard />);
-    expect(screen.getByText(/Oslo/i)).toBeInTheDocument();
+    expect(screen.getByText('Oslo')).toBeInTheDocument();
   });
 
   it('renders exchange tabs', () => {
@@ -57,11 +57,11 @@ describe('StockDashboard', () => {
 
   it('displays error message on fetch failure', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
-    
+
     render(<StockDashboard />);
-    
+
     await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch|Network error/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Failed to fetch|Network error/i).length).toBeGreaterThan(0);
     });
   });
 

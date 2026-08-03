@@ -167,6 +167,22 @@ app.get("/api/yahoo/top-ps", async (_req: Request, res: Response) => {
   }
 });
 
+app.get("/api/yahoo/quotes-by-symbols", async (req: Request, res: Response) => {
+  try {
+    if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });
+    const symbolsParam = (req.query.symbols as string) || "";
+    const symbols = symbolsParam.split(",").map(s => s.trim()).filter(Boolean);
+    if (symbols.length === 0) return res.json({ quotes: [], fetchedAt: Date.now() });
+    const result = await orchestrator.callTool("yahoo.get_quotes_by_symbols", { symbols });
+    const text = result.content?.[0]?.text;
+    if (!text) return res.status(500).json({ error: "No data returned" });
+    res.json(JSON.parse(text));
+  } catch (error) {
+    console.error("Quotes by symbols error:", error);
+    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
 app.get("/api/yahoo/screener", async (req: Request, res: Response) => {
   try {
     if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });

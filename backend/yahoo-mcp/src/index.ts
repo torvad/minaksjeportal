@@ -90,10 +90,10 @@ async function _doRefreshSession(): Promise<void> {
   console.error(`yahoo-mcp: session refreshed, crumb=${sessionCrumb.slice(0, 8)}...`);
 }
 
-async function fetchYahooQuotes(): Promise<any[]> {
+async function fetchQuotesForSymbols(symbolList: string[]): Promise<any[]> {
   if (!sessionCrumb) await refreshSession();
 
-  const symbols = OSLO_STOCKS.map(s => s.symbol).join(",");
+  const symbols = symbolList.join(",");
   const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&crumb=${encodeURIComponent(sessionCrumb)}`;
 
   const res = await fetch(url, {
@@ -126,6 +126,10 @@ async function fetchYahooQuotes(): Promise<any[]> {
   if (!res.ok) throw new Error(`Yahoo Finance returned ${res.status}: ${res.statusText}`);
   const data = await safeJson(res);
   return data?.quoteResponse?.result ?? [];
+}
+
+async function fetchYahooQuotes(): Promise<any[]> {
+  return fetchQuotesForSymbols(OSLO_STOCKS.map(s => s.symbol));
 }
 
 const server = new Server(
@@ -534,6 +538,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       name: "get_nordic_screener",
       description: "Screens all Nordic exchanges. type: 'quality' (default), 'growth', or 'dividend'.",
       inputSchema: { type: "object", properties: { type: { type: "string", description: "quality | growth | dividend" } }, required: [] }
+    },
+    {
+      name: "get_quotes_by_symbols",
+      description: "Fetches real-time quotes for an arbitrary list of Yahoo Finance symbols (e.g. for a watchlist).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          symbols: { type: "array", items: { type: "string" }, description: "Yahoo Finance ticker symbols, e.g. EQNR.OL" }
+        },
+        required: ["symbols"]
+      }
     }
   ]
 }));
@@ -766,6 +781,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const stocks = await fetchNordicScreener(screenerType);
     return {
       content: [{ type: "text", text: JSON.stringify({ stocks, fetchedAt: Date.now() }, null, 2) }]
+    };
+  }
+
+  if (name === "get_quotes_by_symbols") {
+    const symbols = ((args as any)?.symbols ?? []) as string[];
+    if (symbols.length === 0) {
+      return { content: [{ type: "text", text: JSON.stringify({ quotes: [], fetchedAt: Date.now() }, null, 2) }] };
+    }
+    const raw = await fetchQuotesForSymbols(symbols);
+    const quotes = raw.map((q: any) => ({
+      symbol: q.symbol as string,
+      name: (q.longName as string | undefined) ?? (q.shortName as string | undefined) ?? q.symbol,
+      price: (q.regularMarketPrice as number) ?? 0,
+      change: (q.regularMarketChange as number) ?? 0,
+      changePercent: (q.regularMarketChangePercent as number) ?? 0,
+      volume: (q.regularMarketVolume as number) ?? 0,
+      previousClose: (q.regularMarketPreviousClose as number) ?? 0,
+    }));
+    return {
+      content: [{ type: "text", text: JSON.stringify({ quotes, fetchedAt: Date.now() }, null, 2) }]
     };
   }
 

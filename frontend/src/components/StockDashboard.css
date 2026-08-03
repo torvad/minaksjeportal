@@ -67,6 +67,15 @@
   border-bottom-color: #10b981;
 }
 
+.favorites-tab {
+  font-weight: 600;
+}
+
+.favorites-tab.active {
+  color: #fcd34d;
+  border-bottom-color: #f59e0b;
+}
+
 .tab-divider {
   width: 1px;
   height: 14px;

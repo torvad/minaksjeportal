@@ -234,6 +234,32 @@ thead .box-col-stock { z-index: 6; }
   margin-right: 3px;
 }
 
+/* ── Favorite star toggle ── */
+.favorite-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 2px 6px 2px 0;
+  transition: color 0.15s, transform 0.1s;
+}
+
+.favorite-star:hover {
+  color: #fcd34d;
+  transform: scale(1.15);
+}
+
+.favorite-star.active {
+  color: #fcd34d;
+}
+
+.box-col-fav {
+  width: 22px;
+  text-align: center;
+}
+
 /* ── Primary metric cell with proportional bar ── */
 .box-val-cell {
   display: flex;

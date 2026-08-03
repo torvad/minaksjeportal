@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./boxes.css";
 import { useSortableData } from "../hooks/useSortableData";
+import FavoriteStar from "./FavoriteStar";
 
 type ScreenerType = "quality" | "growth" | "dividend";
 
@@ -156,6 +157,7 @@ export default function Screener() {
           <table className="box-table">
             <thead>
               <tr>
+                <th className="box-col-fav" />
                 <th className="box-col-stock sortable" onClick={() => handleSort("name")}>
                   Aksje<span className="sort-ind">{ind("name")}</span>
                 </th>
@@ -203,7 +205,7 @@ export default function Screener() {
             <tbody>
               {sorted.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={9} className="box-empty">Ingen aksjer passerte kriteriene.</td>
+                  <td colSpan={10} className="box-empty">Ingen aksjer passerte kriteriene.</td>
                 </tr>
               )}
               {sorted.map(s => {
@@ -211,6 +213,9 @@ export default function Screener() {
                 const exchColor = EXCHANGE_COLOR[s.exchange] ?? "#64748b";
                 return (
                   <tr key={s.symbol} className="box-row">
+                    <td className="box-col-fav">
+                      <FavoriteStar symbol={s.symbol} name={s.name} exchange={s.exchange} />
+                    </td>
                     <td className="box-col-stock">
                       <span className="box-name" title={s.name}>{s.name}</span>
                       <span className="box-symbol">
