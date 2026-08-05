@@ -7,7 +7,7 @@ import { FavoritesProvider, FavoriteStock } from '../context/FavoritesContext';
 const STORAGE_KEY = 'minaksjeportal:favorites';
 
 const EQNR_QUOTE = { symbol: 'EQNR.OL', name: 'Equinor', price: 300, change: 1.5, changePercent: 0.5, volume: 12345, previousClose: 298.5 };
-const EQNR_RETURNS = { symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30 };
+const EQNR_RETURNS = { symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30, dividendYield: 4.2, dividendChangePercent: 8 };
 
 function seedFavorites(favs: FavoriteStock[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
@@ -69,16 +69,18 @@ describe('Favorites', () => {
     expect(screen.getByText('+12%')).toBeInTheDocument();
     expect(screen.getByText('-4%')).toBeInTheDocument();
     expect(screen.getByText('+30%')).toBeInTheDocument();
+    expect(screen.getByText('4.2%')).toBeInTheDocument();
+    expect(screen.getByText('+8%')).toBeInTheDocument();
   });
 
   it('shows a dash for periods with no historical data', async () => {
     seedFavorites([{ symbol: 'EQNR.OL', name: 'Equinor', exchange: 'OSL' }]);
-    mockFetch({ quotes: [EQNR_QUOTE], returns: [{ symbol: 'EQNR.OL', oneYear: 5, threeYear: null, fiveYear: null }] });
+    mockFetch({ quotes: [EQNR_QUOTE], returns: [{ symbol: 'EQNR.OL', oneYear: 5, threeYear: null, fiveYear: null, dividendYield: null, dividendChangePercent: null }] });
 
     renderFavorites();
 
     expect(await screen.findByText('+5%')).toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(2);
+    expect(screen.getAllByText('—')).toHaveLength(4);
   });
 
   it('still renders quotes when the historical-returns request fails', async () => {
@@ -88,7 +90,7 @@ describe('Favorites', () => {
     renderFavorites();
 
     expect(await screen.findByText('EQNR.OL')).toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(3);
+    expect(screen.getAllByText('—')).toHaveLength(5);
   });
 
   it('joins multiple favorite symbols with a comma in the request URL', async () => {

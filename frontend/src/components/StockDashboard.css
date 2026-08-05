@@ -76,12 +76,51 @@
   border-bottom-color: #f59e0b;
 }
 
+.dashboard-tab {
+  font-weight: 600;
+}
+
+.dashboard-tab.active {
+  color: #38bdf8;
+  border-bottom-color: #0ea5e9;
+}
+
 .tab-divider {
   width: 1px;
   height: 14px;
   background: rgba(255, 255, 255, 0.1);
   align-self: center;
   margin: 0 4px;
+}
+
+/* ── Exchange dropdown (replaces one-tab-per-market) ── */
+.exchange-select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.exchange-select:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.exchange-select.active {
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.exchange-select option {
+  background: #141c2b;
+  color: #e2e8f0;
 }
 
 .dashboard-title {
@@ -110,6 +149,10 @@
   gap: 18px;
 }
 
+.panels-grid--movers {
+  grid-template-rows: 1fr;
+}
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
   .panels-grid { grid-template-columns: 1fr; }
@@ -117,6 +160,11 @@
   .panels-grid--exchange {
     grid-template-rows: none;
     grid-auto-rows: 340px;
+    overflow-y: auto;
+  }
+
+  .panels-grid--movers {
+    grid-auto-rows: 420px;
     overflow-y: auto;
   }
 

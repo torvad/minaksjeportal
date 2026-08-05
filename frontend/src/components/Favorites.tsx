@@ -14,6 +14,8 @@ interface FavoriteQuote {
   oneYear: number | null;
   threeYear: number | null;
   fiveYear: number | null;
+  dividendYield: number | null;
+  dividendChangePercent: number | null;
 }
 
 const ACCENT = {
@@ -34,6 +36,11 @@ function fmtTime(d: Date): string {
 function fmtReturn(v: number | null | undefined): string {
   if (v === null || v === undefined || isNaN(v)) return "—";
   return (v >= 0 ? "+" : "") + Math.round(v) + "%";
+}
+
+function fmtYield(v: number | null | undefined): string {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return v.toFixed(1) + "%";
 }
 
 export default function Favorites() {
@@ -72,6 +79,8 @@ export default function Favorites() {
           oneYear: ret?.oneYear ?? null,
           threeYear: ret?.threeYear ?? null,
           fiveYear: ret?.fiveYear ?? null,
+          dividendYield: ret?.dividendYield ?? null,
+          dividendChangePercent: ret?.dividendChangePercent ?? null,
         };
       });
       setQuotes(merged);
@@ -133,19 +142,29 @@ export default function Favorites() {
               <th className="box-col-pct sortable" onClick={() => handleSort("fiveYear")}>
                 5 år<span className="sort-ind">{ind("fiveYear")}</span>
               </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("dividendYield")}>
+                <span className="th-label-full">Utbytte %</span>
+                <span className="th-label-short">Utb</span>
+                <span className="sort-ind">{ind("dividendYield")}</span>
+              </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("dividendChangePercent")}>
+                <span className="th-label-full">Endr. utbytte</span>
+                <span className="th-label-short">ΔUtb</span>
+                <span className="sort-ind">{ind("dividendChangePercent")}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {favorites.length === 0 && (
               <tr>
-                <td colSpan={7} className="box-empty">
+                <td colSpan={9} className="box-empty">
                   Ingen favoritter ennå. Klikk på stjernen ved en aksje for å følge den.
                 </td>
               </tr>
             )}
             {favorites.length > 0 && sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={7} className="box-empty">
+                <td colSpan={9} className="box-empty">
                   {error ? "Klarte ikke hente data." : "Ingen data."}
                 </td>
               </tr>
@@ -173,6 +192,12 @@ export default function Favorites() {
                   </td>
                   <td className={`box-col-pct ${q.fiveYear !== null && q.fiveYear >= 0 ? "pos" : q.fiveYear !== null ? "neg" : ""}`}>
                     {fmtReturn(q.fiveYear)}
+                  </td>
+                  <td className="box-col-pct">
+                    {fmtYield(q.dividendYield)}
+                  </td>
+                  <td className={`box-col-pct ${q.dividendChangePercent !== null && q.dividendChangePercent >= 0 ? "pos" : q.dividendChangePercent !== null ? "neg" : ""}`}>
+                    {fmtReturn(q.dividendChangePercent)}
                   </td>
                 </tr>
               );

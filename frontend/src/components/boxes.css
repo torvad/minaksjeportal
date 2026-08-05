@@ -456,19 +456,27 @@ thead .box-col-stock { z-index: 6; }
 
   .screener-col-exch { width: 46px; }
 
-  /* Favorites has more columns (name, price, change, 1y/3y/5y) than other
-     panels. Column widths use cqi (relative to the .box container's actual
-     rendered width, see container-type on .box) instead of hardcoded px, so
-     the table fits phones of any width rather than one specific viewport. */
+  /* Favorites has too many columns (name, price, change, 1y/3y/5y, utbytte,
+     endring utbytte) to squeeze onto a phone screen. Instead of shrinking
+     every column to fit, let the table overflow and side-scroll inside
+     .box-table-wrap — only the stock name column stays pinned (sticky,
+     inherited from .box-col-stock) so you never lose track of which row
+     you're looking at while scrolling to the later columns. */
+  .favorites-table {
+    table-layout: auto;
+  }
+
   .favorites-table .box-col-stock {
-    width: clamp(70px, 23cqi, 112px);
-    max-width: clamp(70px, 23cqi, 112px);
+    width: auto;
+    min-width: 96px;
+    max-width: 96px;
   }
 
   .favorites-table .box-col-secondary,
   .favorites-table .box-col-pct {
-    width: clamp(46px, 13.5cqi, 58px);
-    padding: 5px 3px;
+    width: auto;
+    min-width: 58px;
+    padding: 5px 8px;
     font-size: 0.72rem;
   }
 

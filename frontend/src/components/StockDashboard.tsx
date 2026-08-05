@@ -7,6 +7,7 @@ import TopFinancials from "./TopFinancials";
 import Screener from "./Screener";
 import Favorites from "./Favorites";
 import FavoriteStar from "./FavoriteStar";
+import MoversDashboard from "./MoversDashboard";
 import { FavoritesProvider } from "../context/FavoritesContext";
 import { useSortableData } from "../hooks/useSortableData";
 
@@ -136,7 +137,7 @@ function SourcePanel({ title, source, quotes, loading, error, lastUpdated, onRef
 }
 
 export default function StockDashboard() {
-  const [view, setView] = useState<"screener" | "exchange" | "favorites">("exchange");
+  const [view, setView] = useState<"dashboard" | "screener" | "exchange" | "favorites">("dashboard");
   const [exchange, setExchange] = useState("OSL");
   const [yfQuotes, setYfQuotes] = useState<StockQuote[]>([]);
   const [yfLoading, setYfLoading] = useState(false);
@@ -167,6 +168,8 @@ export default function StockDashboard() {
     ? "Screener"
     : view === "favorites"
     ? "Favoritter"
+    : view === "dashboard"
+    ? "Dashboard"
     : (EXCHANGES.find(e => e.code === exchange)?.label ?? exchange);
 
   return (
@@ -177,6 +180,13 @@ export default function StockDashboard() {
             <h1 className="dashboard-title">Minaksjeportal</h1>
           </div>
           <nav className="exchange-tabs">
+            <button
+              className={`exchange-tab dashboard-tab${view === "dashboard" ? " active" : ""}`}
+              onClick={() => setView("dashboard")}
+            >
+              Dashboard
+            </button>
+            <div className="tab-divider" />
             <button
               className={`exchange-tab favorites-tab${view === "favorites" ? " active" : ""}`}
               onClick={() => setView("favorites")}
@@ -191,20 +201,25 @@ export default function StockDashboard() {
               Screener
             </button>
             <div className="tab-divider" />
-            {EXCHANGES.map(ex => (
-              <button
-                key={ex.code}
-                className={`exchange-tab${view === "exchange" && exchange === ex.code ? " active" : ""}`}
-                onClick={() => { setView("exchange"); setExchange(ex.code); }}
-              >
-                {ex.label}
-              </button>
-            ))}
+            <select
+              className={`exchange-select${view === "exchange" ? " active" : ""}`}
+              value={exchange}
+              onChange={(e) => { setExchange(e.target.value); setView("exchange"); }}
+              aria-label="Velg børs"
+            >
+              {EXCHANGES.map(ex => (
+                <option key={ex.code} value={ex.code}>{ex.label}</option>
+              ))}
+            </select>
           </nav>
         </header>
 
         <div className="dashboard-body">
-          {view === "screener" ? (
+          {view === "dashboard" ? (
+            <div className="panels-grid panels-grid--movers">
+              <MoversDashboard />
+            </div>
+          ) : view === "screener" ? (
             <div className="panels-grid">
               <Screener />
             </div>

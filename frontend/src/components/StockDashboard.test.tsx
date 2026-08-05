@@ -23,23 +23,40 @@ describe('StockDashboard', () => {
     expect(screen.getByText('Oslo')).toBeInTheDocument();
   });
 
-  it('renders exchange tabs', () => {
+  it('lists all exchanges in the market dropdown', () => {
     render(<StockDashboard />);
-    expect(screen.getByText('Oslo')).toBeInTheDocument();
-    expect(screen.getByText('Stockholm')).toBeInTheDocument();
-    expect(screen.getByText('København')).toBeInTheDocument();
-    expect(screen.getByText('Helsinki')).toBeInTheDocument();
-    expect(screen.getByText('Reykjavik')).toBeInTheDocument();
+    const exchangeSelect = screen.getByLabelText('Velg børs');
+    const optionLabels = Array.from(exchangeSelect.querySelectorAll('option')).map(o => o.textContent);
+    expect(optionLabels).toEqual(['Oslo', 'Stockholm', 'København', 'Helsinki', 'Reykjavik']);
   });
 
-  it('switches between exchange tabs', async () => {
+  it('shows the combined movers dashboard by default', () => {
+    render(<StockDashboard />);
+    expect(screen.getByText('Størst oppgang')).toBeInTheDocument();
+    expect(screen.getByText('Størst nedgang')).toBeInTheDocument();
+    const dashboardTab = screen.getByRole('button', { name: 'Dashboard' });
+    expect(dashboardTab).toHaveClass('active');
+  });
+
+  it('selecting a market from the dropdown leaves the dashboard view', async () => {
     const user = userEvent.setup();
     render(<StockDashboard />);
-    
-    const stockholmTab = screen.getByText('Stockholm');
-    await user.click(stockholmTab);
-    
-    expect(stockholmTab).toHaveClass('active');
+
+    await user.selectOptions(screen.getByLabelText('Velg børs'), 'Stockholm');
+
+    expect(screen.queryByText('Størst oppgang')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dashboard' })).not.toHaveClass('active');
+  });
+
+  it('switches exchange via the market dropdown', async () => {
+    const user = userEvent.setup();
+    render(<StockDashboard />);
+
+    const exchangeSelect = screen.getByLabelText('Velg børs');
+    await user.selectOptions(exchangeSelect, 'Stockholm');
+
+    expect(exchangeSelect).toHaveValue('STO');
+    expect(exchangeSelect).toHaveClass('active');
   });
 
   it('fetches quotes when exchange is changed', async () => {
@@ -60,8 +77,10 @@ describe('StockDashboard', () => {
 
     render(<StockDashboard />);
 
+    // The default dashboard view reports per-exchange fetch failures via its
+    // own "Klarte ikke hente data for: ..." banner rather than the raw error.
     await waitFor(() => {
-      expect(screen.getAllByText(/Failed to fetch|Network error/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Failed to fetch|Network error|Klarte ikke hente data/i).length).toBeGreaterThan(0);
     });
   });
 

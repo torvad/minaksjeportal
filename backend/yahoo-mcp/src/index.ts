@@ -7,6 +7,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema
 } from "@modelcontextprotocol/sdk/types.js";
+import { SECONDS_PER_DAY, computeDividendMetrics } from "./dividends.js";
 
 const OSLO_STOCKS = [
   { symbol: "EQNR.OL", name: "Equinor", sector: "Energy" },
@@ -137,16 +138,16 @@ interface HistoricalReturn {
   oneYear: number | null;
   threeYear: number | null;
   fiveYear: number | null;
+  dividendYield: number | null;
+  dividendChangePercent: number | null;
 }
-
-const SECONDS_PER_DAY = 24 * 60 * 60;
 
 async function fetchHistoricalReturns(symbolList: string[]): Promise<HistoricalReturn[]> {
   if (!sessionCrumb) await refreshSession();
 
   const fetchOne = async (symbol: string): Promise<HistoricalReturn> => {
-    const empty = { symbol, oneYear: null, threeYear: null, fiveYear: null };
-    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5y&interval=1wk`;
+    const empty = { symbol, oneYear: null, threeYear: null, fiveYear: null, dividendYield: null, dividendChangePercent: null };
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5y&interval=1wk&events=div`;
 
     const doFetch = () => fetch(url, {
       headers: {
@@ -198,11 +199,19 @@ async function fetchHistoricalReturns(symbolList: string[]): Promise<HistoricalR
       return ((latestClose - pastClose) / pastClose) * 100;
     };
 
+    const { dividendYield, dividendChangePercent } = computeDividendMetrics(
+      result?.events?.dividends,
+      latestClose,
+      latestSec
+    );
+
     return {
       symbol,
       oneYear: returnFor(1),
       threeYear: returnFor(3),
       fiveYear: returnFor(5),
+      dividendYield,
+      dividendChangePercent,
     };
   };
 
@@ -629,7 +638,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "get_historical_returns",
-      description: "Returns trailing 1-year, 3-year and 5-year percentage price return for a list of Yahoo Finance symbols.",
+      description: "Returns trailing 1-year, 3-year and 5-year percentage price return, plus trailing-12-month dividend yield and its YoY change, for a list of Yahoo Finance symbols.",
       inputSchema: {
         type: "object",
         properties: {
