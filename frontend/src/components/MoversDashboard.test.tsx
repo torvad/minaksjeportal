@@ -24,28 +24,46 @@ function quote(overrides: Partial<Record<string, any>> = {}) {
   };
 }
 
+/** Mocks global.fetch, routing all-quotes (per exchange) and historical-returns (per symbol) separately. */
+function mockFetch(opts: {
+  quotesByExchange?: Record<string, any[]>;
+  returnsBySymbol?: Record<string, any>;
+  failExchanges?: string[];
+} = {}) {
+  const { quotesByExchange = {}, returnsBySymbol = {}, failExchanges = [] } = opts;
+  global.fetch = vi.fn().mockImplementation((url: string) => {
+    const parsed = new URL(url, 'http://localhost');
+    if (parsed.pathname.includes('historical-returns')) {
+      const symbols = (parsed.searchParams.get('symbols') ?? '').split(',').filter(Boolean);
+      const returns = symbols.map(s => returnsBySymbol[s]).filter(Boolean);
+      return Promise.resolve({ ok: true, json: async () => ({ returns }) });
+    }
+    if (parsed.pathname.includes('all-quotes')) {
+      const exchange = parsed.searchParams.get('exchange') ?? '';
+      if (failExchanges.includes(exchange)) return Promise.reject(new Error(`${exchange} unavailable`));
+      return Promise.resolve({ ok: true, json: async () => ({ quotes: quotesByExchange[exchange] ?? [] }) });
+    }
+    return Promise.reject(new Error(`Unexpected fetch URL: ${url}`));
+  });
+}
+
 describe('MoversDashboard', () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
   it('fetches quotes for every Nordic exchange and ranks gainers/losers across markets', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
-      const exchange = new URL(url, 'http://localhost').searchParams.get('exchange');
-      const quotesByExchange: Record<string, any[]> = {
+    mockFetch({
+      quotesByExchange: {
         OSL: [quote({ symbol: 'EQNR.OL', name: 'Equinor', change: 8, changePercent: 8 })],
         STO: [quote({ symbol: 'VOLV-B.ST', name: 'Volvo', change: -6, changePercent: -6 })],
-        CSE: [],
-        HEL: [],
-        ICE: [],
-      };
-      return Promise.resolve({ ok: true, json: async () => ({ quotes: quotesByExchange[exchange ?? ''] ?? [] }) });
+      },
     });
 
     renderDashboard();
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(5);
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/yahoo/historical-returns'));
     });
     for (const code of ['OSL', 'STO', 'CSE', 'HEL', 'ICE']) {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining(`exchange=${code}`));
@@ -64,8 +82,30 @@ describe('MoversDashboard', () => {
     expect(losersText.indexOf('VOLV-B.ST')).toBeLessThan(losersText.indexOf('EQNR.OL'));
   });
 
+  it('fetches 1y/3y/5y growth only for the symbols shown in the top/bottom lists, and renders them', async () => {
+    mockFetch({
+      quotesByExchange: {
+        OSL: [quote({ symbol: 'EQNR.OL', name: 'Equinor', change: 8, changePercent: 8 })],
+      },
+      returnsBySymbol: {
+        'EQNR.OL': { symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30 },
+      },
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('symbols=EQNR.OL'));
+    });
+
+    const gainersPanel = (await screen.findByText('Størst oppgang')).closest('.box')!;
+    expect(gainersPanel).toHaveTextContent('+12%');
+    expect(gainersPanel).toHaveTextContent('-4%');
+    expect(gainersPanel).toHaveTextContent('+30%');
+  });
+
   it('shows an error banner naming every exchange when all requests fail', async () => {
-    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    mockFetch({ failExchanges: ['OSL', 'STO', 'CSE', 'HEL', 'ICE'] });
 
     renderDashboard();
 
@@ -76,10 +116,9 @@ describe('MoversDashboard', () => {
   });
 
   it('still shows data from exchanges that succeeded when others fail', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
-      const exchange = new URL(url, 'http://localhost').searchParams.get('exchange');
-      if (exchange !== 'OSL') return Promise.reject(new Error('unavailable'));
-      return Promise.resolve({ ok: true, json: async () => ({ quotes: [quote()] }) });
+    mockFetch({
+      quotesByExchange: { OSL: [quote()] },
+      failExchanges: ['STO', 'CSE', 'HEL', 'ICE'],
     });
 
     renderDashboard();

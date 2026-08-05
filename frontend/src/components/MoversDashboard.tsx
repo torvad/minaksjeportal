@@ -12,6 +12,9 @@ interface MoverQuote {
   volume: number;
   previousClose: number;
   exchange: string;
+  oneYear: number | null;
+  threeYear: number | null;
+  fiveYear: number | null;
 }
 
 const EXCHANGES = [
@@ -48,6 +51,11 @@ const TOP_N = 20;
 
 function fmtTime(d: Date): string {
   return d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function fmtGrowth(v: number | null | undefined): string {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return (v >= 0 ? "+" : "") + Math.round(v) + "%";
 }
 
 interface MoverPanelProps {
@@ -97,12 +105,21 @@ function MoverPanel({ title, accent, quotes, loading, error, lastUpdated, onRefr
               <th className="box-col-pct sortable" onClick={() => handleSort("changePercent")}>
                 Endring %<span className="sort-ind">{ind("changePercent")}</span>
               </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("oneYear")}>
+                1 år<span className="sort-ind">{ind("oneYear")}</span>
+              </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("threeYear")}>
+                3 år<span className="sort-ind">{ind("threeYear")}</span>
+              </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("fiveYear")}>
+                5 år<span className="sort-ind">{ind("fiveYear")}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={5} className="box-empty">
+                <td colSpan={8} className="box-empty">
                   {error ? "Klarte ikke hente data." : "Ingen data."}
                 </td>
               </tr>
@@ -134,6 +151,15 @@ function MoverPanel({ title, accent, quotes, loading, error, lastUpdated, onRefr
                   <td className={`box-col-pct ${pos ? "pos" : "neg"}`}>
                     {pos ? "+" : ""}{isNaN(q.changePercent) ? "—" : q.changePercent.toFixed(2)}%
                   </td>
+                  <td className={`box-col-pct ${q.oneYear !== null && q.oneYear >= 0 ? "pos" : q.oneYear !== null ? "neg" : ""}`}>
+                    {fmtGrowth(q.oneYear)}
+                  </td>
+                  <td className={`box-col-pct ${q.threeYear !== null && q.threeYear >= 0 ? "pos" : q.threeYear !== null ? "neg" : ""}`}>
+                    {fmtGrowth(q.threeYear)}
+                  </td>
+                  <td className={`box-col-pct ${q.fiveYear !== null && q.fiveYear >= 0 ? "pos" : q.fiveYear !== null ? "neg" : ""}`}>
+                    {fmtGrowth(q.fiveYear)}
+                  </td>
                 </tr>
               );
             })}
@@ -160,7 +186,8 @@ export default function MoversDashboard() {
           const res = await fetch(`${base}/api/yahoo/all-quotes?exchange=${ex.code}`);
           if (!res.ok) throw new Error(`${ex.label}: API error ${res.status}`);
           const data = await res.json();
-          return ((data.quotes ?? []) as Omit<MoverQuote, "exchange">[]).map(q => ({ ...q, exchange: ex.code }));
+          return ((data.quotes ?? []) as Omit<MoverQuote, "exchange" | "oneYear" | "threeYear" | "fiveYear">[])
+            .map(q => ({ ...q, exchange: ex.code, oneYear: null, threeYear: null, fiveYear: null }));
         })
       );
 
@@ -173,7 +200,37 @@ export default function MoversDashboard() {
         else failed.push(EXCHANGES[i].label);
       });
 
-      setQuotes(merged.filter(q => !isNaN(q.changePercent)));
+      const valid = merged.filter(q => !isNaN(q.changePercent));
+
+      // Only fetch 1y/3y/5y growth for the symbols that actually make the top/bottom
+      // lists — not the whole cross-market universe — since each symbol costs its own
+      // Yahoo chart request on the backend.
+      const gainerSymbols = [...valid].sort((a, b) => b.changePercent - a.changePercent).slice(0, TOP_N).map(q => q.symbol);
+      const loserSymbols = [...valid].sort((a, b) => a.changePercent - b.changePercent).slice(0, TOP_N).map(q => q.symbol);
+      const neededSymbols = Array.from(new Set([...gainerSymbols, ...loserSymbols]));
+
+      if (neededSymbols.length > 0) {
+        try {
+          const returnsRes = await fetch(`${base}/api/yahoo/historical-returns?symbols=${encodeURIComponent(neededSymbols.join(","))}`);
+          if (returnsRes.ok) {
+            const returnsData = await returnsRes.json();
+            const returnsBySymbol = new Map((returnsData.returns ?? []).map((r: any) => [r.symbol, r]));
+            for (const q of valid) {
+              const ret = returnsBySymbol.get(q.symbol) as any;
+              if (ret) {
+                q.oneYear = ret.oneYear ?? null;
+                q.threeYear = ret.threeYear ?? null;
+                q.fiveYear = ret.fiveYear ?? null;
+              }
+            }
+          }
+        } catch {
+          // Growth columns are a bonus on top of the price/volume data — if this
+          // call fails, still show the movers list with those columns left blank.
+        }
+      }
+
+      setQuotes(valid);
       setError(failed.length > 0 ? `Klarte ikke hente data for: ${failed.join(", ")}` : "");
       setLastUpdated(new Date());
     } catch (err) {

@@ -8,11 +8,22 @@ const EXCHANGE_QUOTES: Record<string, any[]> = {
   ICE: [],
 };
 
+const RETURNS_BY_SYMBOL: Record<string, any> = {
+  "EQNR.OL": { symbol: "EQNR.OL", oneYear: 12.3, threeYear: -4.5, fiveYear: 30 },
+  "VOLV-B.ST": { symbol: "VOLV-B.ST", oneYear: -8.1, threeYear: 15, fiveYear: 40 },
+};
+
 async function mockApi(page: Page) {
   await page.route("**/api/yahoo/all-quotes**", (route) => {
     const url = new URL(route.request().url());
     const exchange = url.searchParams.get("exchange") ?? "OSL";
     return route.fulfill({ json: { quotes: EXCHANGE_QUOTES[exchange] ?? [], fetchedAt: Date.now() } });
+  });
+  await page.route("**/api/yahoo/historical-returns**", (route) => {
+    const url = new URL(route.request().url());
+    const symbols = (url.searchParams.get("symbols") ?? "").split(",").filter(Boolean);
+    const returns = symbols.map(s => RETURNS_BY_SYMBOL[s]).filter(Boolean);
+    return route.fulfill({ json: { returns, fetchedAt: Date.now() } });
   });
   await page.route("**/api/yahoo/all-volume**", (route) =>
     route.fulfill({ json: { stocks: [], fetchedAt: Date.now() } })
@@ -50,6 +61,12 @@ test("the Dashboard tab is the default view and shows movers from multiple marke
 
   // The Oslo exchange badge should be visible on the Equinor row.
   await expect(gainers.locator("tr.box-row", { hasText: "EQNR.OL" }).getByText("OSL")).toBeVisible();
+
+  // 1y/3y/5y growth columns are populated from the historical-returns endpoint.
+  const equinorRow = gainers.locator("tr.box-row", { hasText: "EQNR.OL" });
+  await expect(equinorRow).toContainText("+12%");
+  await expect(equinorRow).toContainText("-4%");
+  await expect(equinorRow).toContainText("+30%");
 });
 
 test("picking a market from the dropdown switches away from the dashboard", async ({ page }) => {
