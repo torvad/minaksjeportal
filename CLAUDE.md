@@ -19,3 +19,7 @@ Exchanges: OSL (Oslo), STO (Stockholm), CSE (København), HEL (Helsinki), ICE (R
 
 ## Permissions
 - Always allowed to edit any file in this project without asking
+
+## Workflow
+- When asked to "deploy" the app, also commit and push the changes to GitHub (origin/main) as part of the same request — don't wait for a separate ask.
+- Run the test suite (frontend + backend) before deploying.
