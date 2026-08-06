@@ -58,8 +58,11 @@ function fmtGrowth(v: number | null | undefined): string {
   return (v >= 0 ? "+" : "") + Math.round(v) + "%";
 }
 
+type MoverTab = "gainers" | "losers";
+
 interface MoverPanelProps {
   title: string;
+  tabKey: MoverTab;
   accent: React.CSSProperties;
   quotes: MoverQuote[];
   loading: boolean;
@@ -67,17 +70,33 @@ interface MoverPanelProps {
   lastUpdated: Date | null;
   onRefresh: () => void;
   defaultAsc: boolean;
+  activeTab: MoverTab;
+  onSelectTab: (tab: MoverTab) => void;
 }
 
-function MoverPanel({ title, accent, quotes, loading, error, lastUpdated, onRefresh, defaultAsc }: MoverPanelProps) {
+function MoverPanel({ title, tabKey, accent, quotes, loading, error, lastUpdated, onRefresh, defaultAsc, activeTab, onSelectTab }: MoverPanelProps) {
   const { sorted, handleSort, ind } = useSortableData(quotes, "changePercent", defaultAsc);
 
   return (
-    <div className="box" style={accent}>
+    <div className={`box mover-panel${activeTab === tabKey ? " mover-panel--active" : " mover-panel--inactive"}`} style={accent}>
       <div className="box-header">
-        <div className="box-header-left">
-          <span className="box-title">{title}</span>
-          <span className="box-source">Alle nordiske markeder · finance.yahoo.com</span>
+        <div className="box-header-left mover-header-left">
+          <span className="box-title mover-title">{title}</span>
+          <span className="box-source mover-source">Alle nordiske markeder · finance.yahoo.com</span>
+          <div className="mover-tabbar">
+            <button
+              className={`mover-tab mover-tab--gain${activeTab === "gainers" ? " active" : ""}`}
+              onClick={() => onSelectTab("gainers")}
+            >
+              Størst oppgang
+            </button>
+            <button
+              className={`mover-tab mover-tab--loss${activeTab === "losers" ? " active" : ""}`}
+              onClick={() => onSelectTab("losers")}
+            >
+              Størst nedgang
+            </button>
+          </div>
         </div>
         <div className="box-header-right">
           {lastUpdated && !loading && (
@@ -175,6 +194,7 @@ export default function MoversDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<MoverTab>("gainers");
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -253,6 +273,7 @@ export default function MoversDashboard() {
     <>
       <MoverPanel
         title="Størst oppgang"
+        tabKey="gainers"
         accent={GAIN_ACCENT}
         quotes={gainers}
         loading={loading}
@@ -260,9 +281,12 @@ export default function MoversDashboard() {
         lastUpdated={lastUpdated}
         onRefresh={fetchAll}
         defaultAsc={false}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
       />
       <MoverPanel
         title="Størst nedgang"
+        tabKey="losers"
         accent={LOSS_ACCENT}
         quotes={losers}
         loading={loading}
@@ -270,6 +294,8 @@ export default function MoversDashboard() {
         lastUpdated={lastUpdated}
         onRefresh={fetchAll}
         defaultAsc={true}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
       />
     </>
   );

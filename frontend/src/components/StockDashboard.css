@@ -164,8 +164,10 @@
   }
 
   .panels-grid--movers {
-    grid-auto-rows: 420px;
-    overflow-y: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    grid-auto-rows: unset;
+    overflow: hidden;
   }
 
   .dashboard-body { padding: 0 16px 20px; }
@@ -180,6 +182,7 @@
   .exchange-tabs {
     width: 100%;
     overflow-x: visible;
+    flex-wrap: wrap;
   }
 
   .exchange-tab {
@@ -188,4 +191,11 @@
   }
 
   .tab-divider { margin: 0 1px; }
+
+  /* Push the market dropdown to the right edge — on its own row if the tabs
+     don't leave room, right-aligned either way (flex auto-margin works per
+     wrapped line too). */
+  .exchange-select {
+    margin-left: auto;
+  }
 }

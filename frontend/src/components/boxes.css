@@ -311,6 +311,25 @@ thead .box-col-stock { z-index: 6; }
 .pos { color: #4ade80; }
 .neg { color: #f87171; }
 
+/* ── Movers dashboard tab switcher (mobile only — see @media block below) ── */
+.mover-tabbar { display: none; }
+
+.mover-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 0;
+  margin-right: 16px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.mover-tab--gain.active { color: #6ee7b7; border-bottom-color: #10b981; }
+.mover-tab--loss.active { color: #fca5a5; border-bottom-color: #ef4444; }
+
 /* ── Screener ── */
 .screener-filter-bar {
   display: flex;
@@ -482,4 +501,15 @@ thead .box-col-stock { z-index: 6; }
 
   .favorites-table .th-label-full { display: none; }
   .favorites-table .th-label-short { display: inline; }
+
+  /* Movers dashboard: one full-height box with a tab switcher instead of two
+     stacked half-height boxes — swap the static title for the tab bar, and
+     hide whichever panel (gainers/losers) isn't the active tab. */
+  .mover-header-left { gap: 0; }
+  .mover-title,
+  .mover-source { display: none; }
+  .mover-tabbar { display: flex; }
+
+  .mover-panel--inactive { display: none; }
+  .mover-panel--active { height: 100%; }
 }

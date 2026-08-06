@@ -36,8 +36,11 @@ async function mockApi(page: Page) {
   );
 }
 
+// Each panel's mobile tab switcher repeats both tab labels ("Størst oppgang"
+// AND "Størst nedgang") inside every panel, so a plain hasText match on ".box"
+// would match both panels. Scope to the (desktop-only) title span instead.
 function panel(page: Page, title: string) {
-  return page.locator(".box", { hasText: title });
+  return page.locator(".box").filter({ has: page.locator(".mover-title", { hasText: title }) });
 }
 
 test.beforeEach(async ({ page }) => {
@@ -47,8 +50,8 @@ test.beforeEach(async ({ page }) => {
 
 test("the Dashboard tab is the default view and shows movers from multiple markets", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Dashboard" })).toHaveClass(/active/);
-  await expect(page.getByText("Størst oppgang")).toBeVisible();
-  await expect(page.getByText("Størst nedgang")).toBeVisible();
+  await expect(page.locator(".mover-title", { hasText: "Størst oppgang" })).toBeVisible();
+  await expect(page.locator(".mover-title", { hasText: "Størst nedgang" })).toBeVisible();
 
   const gainers = panel(page, "Størst oppgang");
   const losers = panel(page, "Størst nedgang");
@@ -72,7 +75,7 @@ test("the Dashboard tab is the default view and shows movers from multiple marke
 test("picking a market from the dropdown switches away from the dashboard", async ({ page }) => {
   await page.getByLabel("Velg børs").selectOption({ label: "Stockholm" });
 
-  await expect(page.getByText("Størst oppgang")).not.toBeVisible();
+  await expect(page.locator(".mover-title", { hasText: "Størst oppgang" })).not.toBeVisible();
   await expect(page.getByRole("button", { name: "Dashboard" })).not.toHaveClass(/active/);
   await expect(page.getByLabel("Velg børs")).toHaveClass(/active/);
 });
@@ -81,6 +84,40 @@ test("returning to the Dashboard tab shows the movers view again", async ({ page
   await page.getByLabel("Velg børs").selectOption({ label: "Stockholm" });
   await page.getByRole("button", { name: "Dashboard" }).click();
 
-  await expect(page.getByText("Størst oppgang")).toBeVisible();
+  await expect(page.locator(".mover-title", { hasText: "Størst oppgang" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Dashboard" })).toHaveClass(/active/);
+});
+
+test("on a narrow viewport the movers dashboard shows one full-height panel with a tab switcher", async ({ page }) => {
+  await page.setViewportSize({ width: 380, height: 800 });
+
+  const activePanel = page.locator(".mover-panel--active");
+  const inactivePanel = page.locator(".mover-panel--inactive");
+
+  await expect(activePanel).toBeVisible();
+  await expect(inactivePanel).toBeHidden();
+  await expect(activePanel.getByRole("button", { name: "Størst oppgang" })).toHaveClass(/active/);
+
+  // The visible panel fills most of the viewport height instead of being capped
+  // at a small fixed box like the old stacked-panels layout.
+  const boxHeight = (await activePanel.boundingBox())!.height;
+  expect(boxHeight).toBeGreaterThan(500);
+
+  // Clicking the other tab swaps which panel is active/visible.
+  await activePanel.getByRole("button", { name: "Størst nedgang" }).click();
+
+  await expect(activePanel.getByRole("button", { name: "Størst nedgang" })).toHaveClass(/active/);
+  await expect(inactivePanel).toBeHidden();
+});
+
+test("on a narrow viewport the market dropdown sits on the right side of the header", async ({ page }) => {
+  const viewportWidth = 380;
+  await page.setViewportSize({ width: viewportWidth, height: 800 });
+
+  const select = page.getByLabel("Velg børs");
+  const selectBox = (await select.boundingBox())!;
+
+  // Right edge of the dropdown should be near the right edge of the viewport,
+  // not left-aligned under the tab row.
+  expect(selectBox.x + selectBox.width).toBeGreaterThan(viewportWidth * 0.7);
 });

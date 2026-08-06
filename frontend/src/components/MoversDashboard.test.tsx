@@ -69,8 +69,10 @@ describe('MoversDashboard', () => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining(`exchange=${code}`));
     }
 
-    const gainersPanel = (await screen.findByText('Størst oppgang')).closest('.box')!;
-    const losersPanel = screen.getByText('Størst nedgang').closest('.box')!;
+    // Both panels also carry a mobile tab switcher with matching button labels,
+    // so scope to the (desktop-only) title span to avoid ambiguous matches.
+    const gainersPanel = (await screen.findByText('Størst oppgang', { selector: '.mover-title' })).closest('.box')!;
+    const losersPanel = screen.getByText('Størst nedgang', { selector: '.mover-title' }).closest('.box')!;
 
     // Both movers show up in each panel (too few stocks to fill 20 rows), but
     // the 8% gainer should be ranked above the -6% mover in "Størst oppgang"...
@@ -98,7 +100,7 @@ describe('MoversDashboard', () => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('symbols=EQNR.OL'));
     });
 
-    const gainersPanel = (await screen.findByText('Størst oppgang')).closest('.box')!;
+    const gainersPanel = (await screen.findByText('Størst oppgang', { selector: '.mover-title' })).closest('.box')!;
     expect(gainersPanel).toHaveTextContent('+12%');
     expect(gainersPanel).toHaveTextContent('-4%');
     expect(gainersPanel).toHaveTextContent('+30%');

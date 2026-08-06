@@ -32,8 +32,10 @@ describe('StockDashboard', () => {
 
   it('shows the combined movers dashboard by default', () => {
     render(<StockDashboard />);
-    expect(screen.getByText('Størst oppgang')).toBeInTheDocument();
-    expect(screen.getByText('Størst nedgang')).toBeInTheDocument();
+    // Both panels also carry a mobile tab switcher with matching button labels,
+    // so scope to the (desktop-only) title span to avoid ambiguous matches.
+    expect(screen.getByText('Størst oppgang', { selector: '.mover-title' })).toBeInTheDocument();
+    expect(screen.getByText('Størst nedgang', { selector: '.mover-title' })).toBeInTheDocument();
     const dashboardTab = screen.getByRole('button', { name: 'Dashboard' });
     expect(dashboardTab).toHaveClass('active');
   });
@@ -44,7 +46,7 @@ describe('StockDashboard', () => {
 
     await user.selectOptions(screen.getByLabelText('Velg børs'), 'Stockholm');
 
-    expect(screen.queryByText('Størst oppgang')).not.toBeInTheDocument();
+    expect(screen.queryByText('Størst oppgang', { selector: '.mover-title' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Dashboard' })).not.toHaveClass('active');
   });
 
