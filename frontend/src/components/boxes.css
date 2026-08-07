@@ -458,8 +458,8 @@ thead .box-col-stock { z-index: 6; }
   .box-symbol { font-size: 0.62rem; }
 
   .box-col-stock {
-    width: 82px;
-    max-width: 82px;
+    width: 112px;
+    max-width: 112px;
     padding-left: 10px;
     box-shadow: 4px 0 6px -4px rgba(0, 0, 0, 0.4);
   }
