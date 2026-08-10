@@ -26,6 +26,10 @@
     "chrome-devtools": {
       "command": "npx.cmd",
       "args": ["chrome-devtools-mcp@latest"]
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": ["mcp-server-sqlite", "path/to/database.db"]
     }
   }
 }
