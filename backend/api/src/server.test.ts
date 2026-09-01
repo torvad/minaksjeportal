@@ -38,7 +38,7 @@ function createTestApp(): Application {
       if (!text) return res.status(500).json({ error: 'No data returned' });
       res.json(JSON.parse(text));
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -51,7 +51,7 @@ function createTestApp(): Application {
       if (!text) return res.status(500).json({ error: 'No data returned' });
       res.json(JSON.parse(text));
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -66,7 +66,7 @@ function createTestApp(): Application {
       if (!text) return res.status(500).json({ error: 'No data returned' });
       res.json(JSON.parse(text));
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -81,7 +81,7 @@ function createTestApp(): Application {
       if (!text) return res.status(500).json({ error: 'No data returned' });
       res.json(JSON.parse(text));
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
@@ -276,7 +276,7 @@ describe('API Routes', () => {
       const res = await request(app).get('/api/yahoo/quotes-by-symbols?symbols=EQNR.OL');
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Yahoo unreachable');
+      expect(res.body.error).toBe('Internal server error');
     });
   });
 
@@ -340,7 +340,7 @@ describe('API Routes', () => {
       const res = await request(app).get('/api/yahoo/historical-returns?symbols=EQNR.OL');
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Yahoo unreachable');
+      expect(res.body.error).toBe('Internal server error');
     });
   });
 

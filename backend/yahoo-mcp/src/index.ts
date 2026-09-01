@@ -1,5 +1,9 @@
-// Bypass corporate TLS inspection — must be set before any HTTPS connections
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Bypass corporate TLS inspection in local dev only — never disable certificate
+// validation in production, since every quote this server serves comes from an
+// HTTPS call to Yahoo Finance that would otherwise be trivially MITM-able.
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -94,7 +98,7 @@ async function _doRefreshSession(): Promise<void> {
 async function fetchQuotesForSymbols(symbolList: string[]): Promise<any[]> {
   if (!sessionCrumb) await refreshSession();
 
-  const symbols = symbolList.join(",");
+  const symbols = symbolList.map(encodeURIComponent).join(",");
   const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&crumb=${encodeURIComponent(sessionCrumb)}`;
 
   const res = await fetch(url, {
@@ -399,14 +403,14 @@ async function fetchOsloFinancials(limit = 40, exchange = "OSL"): Promise<any[]>
   const symbols = screened.slice(0, limit).map((q: any) => q.symbol as string);
 
   const fetchOne = async (symbol: string) => {
-    const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=financialData&formatted=false&crumb=${encodeURIComponent(sessionCrumb)}`;
+    const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=financialData&formatted=false&crumb=${encodeURIComponent(sessionCrumb)}`;
     try {
       let r = await fetch(url, {
         headers: { "User-Agent": BROWSER_UA, "Cookie": sessionCookie, "Accept": "application/json" }
       });
       if (r.status === 401) {
         await refreshSession();
-        const retryUrl = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=financialData&formatted=false&crumb=${encodeURIComponent(sessionCrumb)}`;
+        const retryUrl = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=financialData&formatted=false&crumb=${encodeURIComponent(sessionCrumb)}`;
         r = await fetch(retryUrl, {
           headers: { "User-Agent": BROWSER_UA, "Cookie": sessionCookie, "Accept": "application/json" }
         });
@@ -452,7 +456,7 @@ async function fetchNordicScreener(type: ScreenerType = "quality"): Promise<any[
   const fetchOne = async (q: any) => {
     const symbol = q.symbol as string;
     const modules = "financialData%2CdefaultKeyStatistics%2CsummaryDetail";
-    const mkUrl = () => `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=${modules}&formatted=false&crumb=${encodeURIComponent(sessionCrumb)}`;
+    const mkUrl = () => `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${modules}&formatted=false&crumb=${encodeURIComponent(sessionCrumb)}`;
     try {
       let r = await fetch(mkUrl(), { headers: { "User-Agent": BROWSER_UA, "Cookie": sessionCookie, "Accept": "application/json" } });
       if (r.status === 401) { await refreshSession(); r = await fetch(mkUrl(), { headers: { "User-Agent": BROWSER_UA, "Cookie": sessionCookie, "Accept": "application/json" } }); }
