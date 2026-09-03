@@ -14,11 +14,18 @@ const FLAG: Record<string, string> = {
   USD: "🇺🇸", EUR: "🇪🇺", SEK: "🇸🇪", DKK: "🇩🇰",
 };
 
-// SEK/DKK trade near parity with NOK, so they need more decimals to be useful.
+// SEK/DKK trade near parity with NOK, so — like Norges Bank — they're quoted
+// per 100 units (100 SEK ≈ 97 NOK) rather than per 1.
+const PER_100 = new Set(["SEK", "DKK"]);
+
+function unitLabel(base: string): string {
+  return PER_100.has(base) ? `100 ${base}` : base;
+}
+
 function fmtRate(base: string, v: number | null): string {
   if (v === null || isNaN(v)) return "—";
-  const decimals = base === "SEK" || base === "DKK" ? 4 : 2;
-  return v.toLocaleString("nb-NO", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  const scaled = PER_100.has(base) ? v * 100 : v;
+  return scaled.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function fmtPct(v: number): string {
@@ -58,7 +65,7 @@ export default function CurrencyBar() {
         return (
           <span className="currency-item" key={r.base} title={`${r.name} → NOK`}>
             <span className="currency-flag">{FLAG[r.base] ?? ""}</span>
-            <span className="currency-code">{r.base}</span>
+            <span className="currency-code">{unitLabel(r.base)}</span>
             <span className="currency-price">{fmtRate(r.base, r.price)}</span>
             <span className={`currency-pct ${pos ? "pos" : "neg"}`}>{fmtPct(r.changePercent)}</span>
           </span>
