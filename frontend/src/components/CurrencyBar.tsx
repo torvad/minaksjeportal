@@ -10,17 +10,9 @@ interface FxRate {
   changePercent: number;
 }
 
-const FLAG: Record<string, string> = {
-  USD: "🇺🇸", EUR: "🇪🇺", SEK: "🇸🇪", DKK: "🇩🇰",
-};
-
 // SEK/DKK trade near parity with NOK, so — like Norges Bank — they're quoted
 // per 100 units (100 SEK ≈ 97 NOK) rather than per 1.
 const PER_100 = new Set(["SEK", "DKK"]);
-
-function unitLabel(base: string): string {
-  return PER_100.has(base) ? `100 ${base}` : base;
-}
 
 function fmtRate(base: string, v: number | null): string {
   if (v === null || isNaN(v)) return "—";
@@ -59,13 +51,11 @@ export default function CurrencyBar() {
 
   return (
     <div className="currency-bar" aria-label="Valutakurser mot NOK">
-      <span className="currency-bar-label">Valuta mot NOK</span>
       {rates.map(r => {
         const pos = r.changePercent >= 0;
         return (
           <span className="currency-item" key={r.base} title={`${r.name} → NOK`}>
-            <span className="currency-flag">{FLAG[r.base] ?? ""}</span>
-            <span className="currency-code">{unitLabel(r.base)}</span>
+            <span className="currency-code">{r.base}</span>
             <span className="currency-price">{fmtRate(r.base, r.price)}</span>
             <span className={`currency-pct ${pos ? "pos" : "neg"}`}>{fmtPct(r.changePercent)}</span>
           </span>
