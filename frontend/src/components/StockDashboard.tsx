@@ -204,10 +204,11 @@ export default function StockDashboard() {
             <div className="tab-divider" />
             <select
               className={`exchange-select${view === "exchange" ? " active" : ""}`}
-              value={exchange}
+              value={view === "exchange" ? exchange : ""}
               onChange={(e) => { setExchange(e.target.value); setView("exchange"); }}
               aria-label="Velg børs"
             >
+              <option value="" disabled>Velg børs</option>
               {EXCHANGES.map(ex => (
                 <option key={ex.code} value={ex.code}>{ex.label}</option>
               ))}

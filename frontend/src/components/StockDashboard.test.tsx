@@ -27,7 +27,12 @@ describe('StockDashboard', () => {
     render(<StockDashboard />);
     const exchangeSelect = screen.getByLabelText('Velg børs');
     const optionLabels = Array.from(exchangeSelect.querySelectorAll('option')).map(o => o.textContent);
-    expect(optionLabels).toEqual(['Oslo', 'Stockholm', 'København', 'Helsinki', 'Reykjavik']);
+    expect(optionLabels).toEqual(['Velg børs', 'Oslo', 'Stockholm', 'København', 'Helsinki', 'Reykjavik']);
+  });
+
+  it('defaults the market dropdown to the "Velg børs" placeholder', () => {
+    render(<StockDashboard />);
+    expect(screen.getByLabelText('Velg børs')).toHaveValue('');
   });
 
   it('shows the combined movers dashboard by default', () => {
