@@ -1,15 +1,18 @@
+/* Sits in the middle of the top header, between the logo and the tab nav. */
 .currency-bar {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 6px 20px;
-  padding: 8px 28px;
-  margin: 0 0 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.015);
+  gap: 4px 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
   font-size: 0.78rem;
 }
+
+.currency-bar::-webkit-scrollbar { display: none; }
 
 .currency-bar-label {
   color: rgba(255, 255, 255, 0.38);
@@ -23,6 +26,7 @@
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .currency-flag {
@@ -49,10 +53,19 @@
 .currency-pct.pos { color: #4ade80; }
 .currency-pct.neg { color: #f87171; }
 
+/* Not enough width to sit alongside the logo and tabs — hide the label first. */
+@media (max-width: 1180px) {
+  .currency-bar-label { display: none; }
+}
+
 @media (max-width: 700px) {
   .currency-bar {
-    padding: 7px 20px;
-    gap: 4px 14px;
+    width: 100%;
+    flex: none;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 14px;
+    padding-bottom: 2px;
     font-size: 0.72rem;
   }
 }

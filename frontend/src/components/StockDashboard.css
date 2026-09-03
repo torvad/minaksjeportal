@@ -18,8 +18,16 @@
 
 .header-left {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.dashboard-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: block;
   flex-shrink: 0;
 }
 
@@ -124,7 +132,7 @@
 }
 
 .dashboard-title {
-  font-size: 0.72rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: #e2e8f0;
@@ -178,6 +186,10 @@
     gap: 4px;
     padding: 12px 20px 10px;
   }
+
+  .dashboard-title { font-size: 0.92rem; }
+
+  .dashboard-logo { width: 24px; height: 24px; }
 
   .exchange-tabs {
     width: 100%;

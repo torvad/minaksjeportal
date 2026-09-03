@@ -178,8 +178,10 @@ export default function StockDashboard() {
       <div className="dashboard">
         <header className="dashboard-header">
           <div className="header-left">
+            <img className="dashboard-logo" src="/favicon.svg" alt="" width={28} height={28} />
             <h1 className="dashboard-title">Minaksjeportal</h1>
           </div>
+          <CurrencyBar />
           <nav className="exchange-tabs">
             <button
               className={`exchange-tab dashboard-tab${view === "dashboard" ? " active" : ""}`}
@@ -215,8 +217,6 @@ export default function StockDashboard() {
             </select>
           </nav>
         </header>
-
-        <CurrencyBar />
 
         <div className="dashboard-body">
           {view === "dashboard" ? (
