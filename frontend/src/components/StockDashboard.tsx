@@ -8,6 +8,7 @@ import Screener from "./Screener";
 import Favorites from "./Favorites";
 import FavoriteStar from "./FavoriteStar";
 import MoversDashboard from "./MoversDashboard";
+import CurrencyBar from "./CurrencyBar";
 import { FavoritesProvider } from "../context/FavoritesContext";
 import { useSortableData } from "../hooks/useSortableData";
 
@@ -213,6 +214,8 @@ export default function StockDashboard() {
             </select>
           </nav>
         </header>
+
+        <CurrencyBar />
 
         <div className="dashboard-body">
           {view === "dashboard" ? (

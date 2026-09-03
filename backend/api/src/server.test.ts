@@ -55,6 +55,18 @@ function createTestApp(): Application {
     }
   });
 
+  app.get('/api/yahoo/fx', async (req, res) => {
+    try {
+      if (!mockOrchestrator) return res.status(503).json({ error: 'Orchestrator not initialized' });
+      const result = await mockOrchestrator.callTool('yahoo.get_fx_rates', {});
+      const text = result?.content?.[0]?.text;
+      if (!text) return res.status(500).json({ error: 'No data returned' });
+      res.json(JSON.parse(text));
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   app.get('/api/yahoo/quotes-by-symbols', async (req, res) => {
     try {
       if (!mockOrchestrator) return res.status(503).json({ error: 'Orchestrator not initialized' });
@@ -274,6 +286,47 @@ describe('API Routes', () => {
       mockOrchestrator.callTool.mockRejectedValue(new Error('Yahoo unreachable'));
 
       const res = await request(app).get('/api/yahoo/quotes-by-symbols?symbols=EQNR.OL');
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Internal server error');
+    });
+  });
+
+  describe('FX Rates Endpoint', () => {
+    it('GET /api/yahoo/fx returns the currency rates against NOK', async () => {
+      mockOrchestrator.callTool.mockResolvedValue({
+        content: [{
+          text: JSON.stringify({
+            rates: [
+              { base: 'USD', quote: 'NOK', name: 'Amerikanske dollar', price: 10.52, change: 0.03, changePercent: 0.29 },
+              { base: 'EUR', quote: 'NOK', name: 'Euro', price: 11.73, change: -0.01, changePercent: -0.08 },
+            ],
+            fetchedAt: 123,
+          }),
+        }],
+      });
+
+      const res = await request(app).get('/api/yahoo/fx');
+
+      expect(res.status).toBe(200);
+      expect(res.body.rates).toHaveLength(2);
+      expect(res.body.rates[0].base).toBe('USD');
+      expect(mockOrchestrator.callTool).toHaveBeenCalledWith('yahoo.get_fx_rates', {});
+    });
+
+    it('returns 500 when the orchestrator returns no data', async () => {
+      mockOrchestrator.callTool.mockResolvedValue({ content: [{ text: null }] });
+
+      const res = await request(app).get('/api/yahoo/fx');
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('No data returned');
+    });
+
+    it('returns 500 when the orchestrator call throws', async () => {
+      mockOrchestrator.callTool.mockRejectedValue(new Error('Yahoo unreachable'));
+
+      const res = await request(app).get('/api/yahoo/fx');
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Internal server error');

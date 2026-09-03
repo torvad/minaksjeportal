@@ -207,6 +207,18 @@ app.get("/api/yahoo/top-ps", async (_req: Request, res: Response) => {
   }
 });
 
+app.get("/api/yahoo/fx", async (_req: Request, res: Response) => {
+  try {
+    if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });
+    const result = await orchestrator.callTool("yahoo.get_fx_rates", {});
+    const text = result.content?.[0]?.text;
+    if (!text) return res.status(500).json({ error: "No data returned" });
+    res.json(JSON.parse(text));
+  } catch (error) {
+    handleError(res, "FX rates error", error);
+  }
+});
+
 app.get("/api/yahoo/quotes-by-symbols", async (req: Request, res: Response) => {
   try {
     if (!orchestrator) return res.status(503).json({ error: "Orchestrator not initialized" });

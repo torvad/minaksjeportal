@@ -26,6 +26,15 @@ const OSLO_STOCKS = [
   { symbol: "SUBC.OL", name: "Subsea 7", sector: "Energy Services" }
 ];
 
+// Key currency pairs quoted against NOK. Yahoo's FX symbols are of the form
+// <BASE><QUOTE>=X, so USDNOK=X is "how many NOK for 1 USD".
+const FX_PAIRS = [
+  { symbol: "USDNOK=X", base: "USD", name: "Amerikanske dollar" },
+  { symbol: "EURNOK=X", base: "EUR", name: "Euro" },
+  { symbol: "SEKNOK=X", base: "SEK", name: "Svenske kroner" },
+  { symbol: "DKKNOK=X", base: "DKK", name: "Danske kroner" },
+];
+
 const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 const EXCHANGE_REGION: Record<string, string> = {
@@ -630,6 +639,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: "object", properties: { type: { type: "string", description: "quality | growth | dividend" } }, required: [] }
     },
     {
+      name: "get_fx_rates",
+      description: "Returns the key currency rates against NOK (USD, EUR, SEK, DKK) with intraday change.",
+      inputSchema: { type: "object", properties: {}, required: [] }
+    },
+    {
       name: "get_quotes_by_symbols",
       description: "Fetches real-time quotes for an arbitrary list of Yahoo Finance symbols (e.g. for a watchlist).",
       inputSchema: {
@@ -882,6 +896,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const stocks = await fetchNordicScreener(screenerType);
     return {
       content: [{ type: "text", text: JSON.stringify({ stocks, fetchedAt: Date.now() }, null, 2) }]
+    };
+  }
+
+  if (name === "get_fx_rates") {
+    const raw = await fetchQuotesForSymbols(FX_PAIRS.map(p => p.symbol));
+    const bySymbol = new Map(raw.map((q: any) => [q.symbol, q]));
+    const rates = FX_PAIRS.map(p => {
+      const q = (bySymbol.get(p.symbol) ?? {}) as any;
+      return {
+        base: p.base,
+        quote: "NOK",
+        name: p.name,
+        price: (q.regularMarketPrice as number) ?? null,
+        change: (q.regularMarketChange as number) ?? 0,
+        changePercent: (q.regularMarketChangePercent as number) ?? 0,
+      };
+    });
+    return {
+      content: [{ type: "text", text: JSON.stringify({ rates, fetchedAt: Date.now() }, null, 2) }]
     };
   }
 
