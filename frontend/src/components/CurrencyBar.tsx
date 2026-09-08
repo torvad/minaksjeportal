@@ -23,12 +23,12 @@ function fmtRate(base: string, v: number | null): string {
 
 function fmtPct(v: number): string {
   if (isNaN(v)) return "";
-  return (v >= 0 ? "+" : "") + v.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %";
+  return (v >= 0 ? "+" : "") + v.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
 }
 
 function fmtMonthPct(v: number | null): string {
   if (v === null || isNaN(v)) return "";
-  return (v >= 0 ? "+" : "") + v.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+  return (v >= 0 ? "+" : "") + v.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
 }
 
 export default function CurrencyBar() {
@@ -67,8 +67,8 @@ export default function CurrencyBar() {
             <span className="currency-price">{fmtRate(r.base, r.price)}</span>
             <span className={`currency-pct ${pos ? "pos" : "neg"}`}>{fmtPct(r.changePercent)}</span>
             {month && (
-              <span className={`currency-month ${mPos ? "pos" : "neg"}`} title="Siste måned">
-                1M {month}
+              <span className={`currency-month ${mPos ? "pos" : "neg"}`} title="Endring siste måned">
+                <span className="currency-month-tag">1M</span>{month}
               </span>
             )}
           </span>
