@@ -298,8 +298,8 @@ describe('API Routes', () => {
         content: [{
           text: JSON.stringify({
             rates: [
-              { base: 'USD', quote: 'NOK', name: 'Amerikanske dollar', price: 10.52, change: 0.03, changePercent: 0.29 },
-              { base: 'EUR', quote: 'NOK', name: 'Euro', price: 11.73, change: -0.01, changePercent: -0.08 },
+              { base: 'USD', quote: 'NOK', name: 'Amerikanske dollar', price: 10.52, change: 0.03, changePercent: 0.29, monthChangePercent: -1.4 },
+              { base: 'EUR', quote: 'NOK', name: 'Euro', price: 11.73, change: -0.01, changePercent: -0.08, monthChangePercent: 0.6 },
             ],
             fetchedAt: 123,
           }),

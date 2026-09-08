@@ -41,6 +41,18 @@
 .currency-pct.pos { color: #4ade80; }
 .currency-pct.neg { color: #f87171; }
 
+/* Trailing 1-month change — quieter than the intraday figure. */
+.currency-month {
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  padding-left: 2px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  opacity: 0.8;
+}
+
+.currency-month.pos { color: #4ade80; }
+.currency-month.neg { color: #f87171; }
+
 @media (max-width: 700px) {
   .currency-bar {
     width: 100%;

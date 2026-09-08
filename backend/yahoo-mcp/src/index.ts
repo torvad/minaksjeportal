@@ -231,6 +231,51 @@ async function fetchHistoricalReturns(symbolList: string[]): Promise<HistoricalR
   return Promise.all(symbolList.map(fetchOne));
 }
 
+// Trailing ~1-month percentage change (first vs. last daily close), keyed by
+// symbol. Used for the currency bar; null when Yahoo has no usable history.
+async function fetchMonthChangePercent(symbolList: string[]): Promise<Record<string, number | null>> {
+  if (!sessionCrumb) await refreshSession();
+
+  const out: Record<string, number | null> = {};
+
+  await Promise.all(symbolList.map(async (symbol) => {
+    out[symbol] = null;
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1mo&interval=1d`;
+
+    const doFetch = () => fetch(url, {
+      headers: {
+        "User-Agent": BROWSER_UA,
+        "Cookie": sessionCookie,
+        "Accept": "application/json, */*",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    });
+
+    let res: globalThis.Response;
+    try {
+      res = await doFetch();
+      if (res.status === 401) { await refreshSession(); res = await doFetch(); }
+    } catch {
+      return;
+    }
+    if (!res.ok) return;
+
+    let data: Record<string, any>;
+    try { data = await safeJson(res); } catch { return; }
+
+    const closes: Array<number | null> = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? [];
+    const valid = closes.filter((c): c is number => c != null);
+    if (valid.length < 2) return;
+
+    const first = valid[0];
+    const last = valid[valid.length - 1];
+    if (!first) return;
+    out[symbol] = ((last - first) / first) * 100;
+  }));
+
+  return out;
+}
+
 const server = new Server(
   { name: "yahoo-mcp", version: "0.1.0" },
   { capabilities: { tools: {} } }
@@ -640,7 +685,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "get_fx_rates",
-      description: "Returns the key currency rates against NOK (USD, EUR, SEK, DKK) with intraday change.",
+      description: "Returns the key currency rates against NOK (USD, EUR, SEK, DKK) with intraday and trailing 1-month change.",
       inputSchema: { type: "object", properties: {}, required: [] }
     },
     {
@@ -900,7 +945,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   if (name === "get_fx_rates") {
-    const raw = await fetchQuotesForSymbols(FX_PAIRS.map(p => p.symbol));
+    const symbols = FX_PAIRS.map(p => p.symbol);
+    const [raw, monthChanges] = await Promise.all([
+      fetchQuotesForSymbols(symbols),
+      fetchMonthChangePercent(symbols),
+    ]);
     const bySymbol = new Map(raw.map((q: any) => [q.symbol, q]));
     const rates = FX_PAIRS.map(p => {
       const q = (bySymbol.get(p.symbol) ?? {}) as any;
@@ -911,6 +960,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         price: (q.regularMarketPrice as number) ?? null,
         change: (q.regularMarketChange as number) ?? 0,
         changePercent: (q.regularMarketChangePercent as number) ?? 0,
+        monthChangePercent: monthChanges[p.symbol] ?? null,
       };
     });
     return {
