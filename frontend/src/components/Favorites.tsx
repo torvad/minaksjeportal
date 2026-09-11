@@ -11,9 +11,11 @@ interface FavoriteQuote {
   change: number;
   changePercent: number;
   previousClose: number;
+  oneMonth: number | null;
   oneYear: number | null;
   threeYear: number | null;
   fiveYear: number | null;
+  tenYear: number | null;
   dividendYield: number | null;
   dividendChangePercent: number | null;
 }
@@ -76,9 +78,11 @@ export default function Favorites() {
         const ret = returnsBySymbol.get(q.symbol) as any;
         return {
           ...q,
+          oneMonth: ret?.oneMonth ?? null,
           oneYear: ret?.oneYear ?? null,
           threeYear: ret?.threeYear ?? null,
           fiveYear: ret?.fiveYear ?? null,
+          tenYear: ret?.tenYear ?? null,
           dividendYield: ret?.dividendYield ?? null,
           dividendChangePercent: ret?.dividendChangePercent ?? null,
         };
@@ -133,6 +137,9 @@ export default function Favorites() {
                 <span className="th-label-short">Endr</span>
                 <span className="sort-ind">{ind("changePercent")}</span>
               </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("oneMonth")}>
+                Måned<span className="sort-ind">{ind("oneMonth")}</span>
+              </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("oneYear")}>
                 1 år<span className="sort-ind">{ind("oneYear")}</span>
               </th>
@@ -141,6 +148,9 @@ export default function Favorites() {
               </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("fiveYear")}>
                 5 år<span className="sort-ind">{ind("fiveYear")}</span>
+              </th>
+              <th className="box-col-pct sortable" onClick={() => handleSort("tenYear")}>
+                10 år<span className="sort-ind">{ind("tenYear")}</span>
               </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("dividendYield")}>
                 <span className="th-label-full">Utbytte %</span>
@@ -157,14 +167,14 @@ export default function Favorites() {
           <tbody>
             {favorites.length === 0 && (
               <tr>
-                <td colSpan={9} className="box-empty">
+                <td colSpan={11} className="box-empty">
                   Ingen favoritter ennå. Klikk på stjernen ved en aksje for å følge den.
                 </td>
               </tr>
             )}
             {favorites.length > 0 && sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={9} className="box-empty">
+                <td colSpan={11} className="box-empty">
                   {error ? "Klarte ikke hente data." : "Ingen data."}
                 </td>
               </tr>
@@ -184,6 +194,9 @@ export default function Favorites() {
                   <td className={`box-col-pct ${pos ? "pos" : "neg"}`}>
                     {pos ? "+" : ""}{isNaN(q.changePercent) ? "—" : q.changePercent.toFixed(2)}%
                   </td>
+                  <td className={`box-col-pct ${q.oneMonth !== null && q.oneMonth >= 0 ? "pos" : q.oneMonth !== null ? "neg" : ""}`}>
+                    {fmtReturn(q.oneMonth)}
+                  </td>
                   <td className={`box-col-pct ${q.oneYear !== null && q.oneYear >= 0 ? "pos" : q.oneYear !== null ? "neg" : ""}`}>
                     {fmtReturn(q.oneYear)}
                   </td>
@@ -192,6 +205,9 @@ export default function Favorites() {
                   </td>
                   <td className={`box-col-pct ${q.fiveYear !== null && q.fiveYear >= 0 ? "pos" : q.fiveYear !== null ? "neg" : ""}`}>
                     {fmtReturn(q.fiveYear)}
+                  </td>
+                  <td className={`box-col-pct ${q.tenYear !== null && q.tenYear >= 0 ? "pos" : q.tenYear !== null ? "neg" : ""}`}>
+                    {fmtReturn(q.tenYear)}
                   </td>
                   <td className="box-col-pct">
                     {fmtYield(q.dividendYield)}

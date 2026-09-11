@@ -148,9 +148,11 @@ async function fetchYahooQuotes(): Promise<any[]> {
 
 interface HistoricalReturn {
   symbol: string;
+  oneMonth: number | null;
   oneYear: number | null;
   threeYear: number | null;
   fiveYear: number | null;
+  tenYear: number | null;
   dividendYield: number | null;
   dividendChangePercent: number | null;
 }
@@ -159,8 +161,21 @@ async function fetchHistoricalReturns(symbolList: string[]): Promise<HistoricalR
   if (!sessionCrumb) await refreshSession();
 
   const fetchOne = async (symbol: string): Promise<HistoricalReturn> => {
-    const empty = { symbol, oneYear: null, threeYear: null, fiveYear: null, dividendYield: null, dividendChangePercent: null };
-    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5y&interval=1wk&events=div`;
+    const empty = {
+      symbol,
+      oneMonth: null,
+      oneYear: null,
+      threeYear: null,
+      fiveYear: null,
+      tenYear: null,
+      dividendYield: null,
+      dividendChangePercent: null,
+    };
+    // 10y range (up from 5y) so returnFor(10) has enough history to resolve —
+    // weekly bars stay precise enough for the 1-month figure too (returnFor
+    // tolerates up to 45 days off, and weekly spacing is only ~3.5 days worst
+    // case), so one fetch now covers every period instead of a second call.
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=10y&interval=1wk&events=div`;
 
     const doFetch = () => fetch(url, {
       headers: {
@@ -220,9 +235,11 @@ async function fetchHistoricalReturns(symbolList: string[]): Promise<HistoricalR
 
     return {
       symbol,
+      oneMonth: returnFor(1 / 12),
       oneYear: returnFor(1),
       threeYear: returnFor(3),
       fiveYear: returnFor(5),
+      tenYear: returnFor(10),
       dividendYield,
       dividendChangePercent,
     };
@@ -701,7 +718,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "get_historical_returns",
-      description: "Returns trailing 1-year, 3-year and 5-year percentage price return, plus trailing-12-month dividend yield and its YoY change, for a list of Yahoo Finance symbols.",
+      description: "Returns trailing 1-month, 1-year, 3-year, 5-year and 10-year percentage price return, plus trailing-12-month dividend yield and its YoY change, for a list of Yahoo Finance symbols.",
       inputSchema: {
         type: "object",
         properties: {
