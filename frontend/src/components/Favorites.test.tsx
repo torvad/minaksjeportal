@@ -80,7 +80,8 @@ describe('Favorites', () => {
     renderFavorites();
 
     expect(await screen.findByText('+5%')).toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(4);
+    // oneMonth, threeYear, fiveYear, tenYear, dividendYield, dividendChangePercent
+    expect(screen.getAllByText('—')).toHaveLength(6);
   });
 
   it('still renders quotes when the historical-returns request fails', async () => {
@@ -90,7 +91,8 @@ describe('Favorites', () => {
     renderFavorites();
 
     expect(await screen.findByText('EQNR.OL')).toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(5);
+    // oneMonth, oneYear, threeYear, fiveYear, tenYear, dividendYield, dividendChangePercent
+    expect(screen.getAllByText('—')).toHaveLength(7);
   });
 
   it('joins multiple favorite symbols with a comma in the request URL', async () => {
