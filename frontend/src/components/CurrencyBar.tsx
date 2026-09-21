@@ -21,16 +21,6 @@ function fmtRate(base: string, v: number | null): string {
   return scaled.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function fmtPct(v: number): string {
-  if (isNaN(v)) return "";
-  return (v >= 0 ? "+" : "") + v.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
-}
-
-function fmtMonthPct(v: number | null): string {
-  if (v === null || isNaN(v)) return "";
-  return (v >= 0 ? "+" : "") + v.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
-}
-
 export default function CurrencyBar() {
   const [rates, setRates] = useState<FxRate[]>([]);
   const [error, setError] = useState(false);
@@ -59,18 +49,10 @@ export default function CurrencyBar() {
     <div className="currency-bar" aria-label="Valutakurser mot NOK">
       {rates.map(r => {
         const pos = r.changePercent >= 0;
-        const mPos = (r.monthChangePercent ?? 0) >= 0;
-        const month = fmtMonthPct(r.monthChangePercent);
         return (
           <span className="currency-item" key={r.base} title={`${r.name} → NOK`}>
             <span className="currency-code">{r.base}</span>
-            <span className="currency-price">{fmtRate(r.base, r.price)}</span>
-            <span className={`currency-pct ${pos ? "pos" : "neg"}`}>{fmtPct(r.changePercent)}</span>
-            {month && (
-              <span className={`currency-month ${mPos ? "pos" : "neg"}`} title="Endring siste måned">
-                <span className="currency-month-tag">1M</span>{month}
-              </span>
-            )}
+            <span className={`currency-price ${pos ? "pos" : "neg"}`}>{fmtRate(r.base, r.price)}</span>
           </span>
         );
       })}

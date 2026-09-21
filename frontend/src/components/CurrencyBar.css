@@ -28,36 +28,12 @@
 }
 
 .currency-price {
-  color: #e2e8f0;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
-.currency-pct {
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.currency-pct.pos { color: #4ade80; }
-.currency-pct.neg { color: #f87171; }
-
-/* Trailing 1-month change — quieter than the intraday figure. */
-.currency-month {
-  font-size: 0.68rem;
-  font-variant-numeric: tabular-nums;
-  padding-left: 6px;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-  opacity: 0.85;
-}
-
-.currency-month-tag {
-  color: rgba(255, 255, 255, 0.4);
-  font-weight: 600;
-  margin-right: 3px;
-}
-
-.currency-month.pos { color: #4ade80; }
-.currency-month.neg { color: #f87171; }
+.currency-price.pos { color: #4ade80; }
+.currency-price.neg { color: #f87171; }
 
 @media (max-width: 700px) {
   .currency-bar {
