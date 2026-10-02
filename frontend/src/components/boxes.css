@@ -441,6 +441,16 @@ thead .box-col-stock { z-index: 6; }
   border: 1px solid;
 }
 
+/* Movers: extra columns (month/10y, then dividend) only when the box has room
+   for them — measured off the box's own width via its inline-size container. */
+@container (max-width: 1100px) {
+  .movers-table .mover-col-wide { display: none; }
+}
+
+@container (max-width: 860px) {
+  .movers-table .mover-col-mid { display: none; }
+}
+
 /* ── Mobile ── */
 @media (max-width: 700px) {
   .box-table {

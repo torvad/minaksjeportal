@@ -84,13 +84,13 @@ describe('MoversDashboard', () => {
     expect(losersText.indexOf('VOLV-B.ST')).toBeLessThan(losersText.indexOf('EQNR.OL'));
   });
 
-  it('fetches 1y/3y/5y growth only for the symbols shown in the top/bottom lists, and renders them', async () => {
+  it('fetches historical returns only for the symbols shown in the top/bottom lists, and renders them', async () => {
     mockFetch({
       quotesByExchange: {
         OSL: [quote({ symbol: 'EQNR.OL', name: 'Equinor', change: 8, changePercent: 8 })],
       },
       returnsBySymbol: {
-        'EQNR.OL': { symbol: 'EQNR.OL', oneYear: 12.3, threeYear: -4.5, fiveYear: 30 },
+        'EQNR.OL': { symbol: 'EQNR.OL', oneMonth: 7, oneYear: 12.3, threeYear: -4.5, fiveYear: 30, tenYear: 150, dividendYield: 4.2, dividendChangePercent: -11 },
       },
     });
 
@@ -104,6 +104,10 @@ describe('MoversDashboard', () => {
     expect(gainersPanel).toHaveTextContent('+12%');
     expect(gainersPanel).toHaveTextContent('-4%');
     expect(gainersPanel).toHaveTextContent('+30%');
+    expect(gainersPanel).toHaveTextContent('+7%');
+    expect(gainersPanel).toHaveTextContent('+150%');
+    expect(gainersPanel).toHaveTextContent('4.2%');
+    expect(gainersPanel).toHaveTextContent('-11%');
   });
 
   it('shows an error banner naming every exchange when all requests fail', async () => {

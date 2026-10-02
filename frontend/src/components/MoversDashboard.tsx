@@ -12,10 +12,21 @@ interface MoverQuote {
   volume: number;
   previousClose: number;
   exchange: string;
+  oneMonth: number | null;
   oneYear: number | null;
   threeYear: number | null;
   fiveYear: number | null;
+  tenYear: number | null;
+  dividendYield: number | null;
+  dividendChangePercent: number | null;
 }
+
+type ReturnFields = "oneMonth" | "oneYear" | "threeYear" | "fiveYear" | "tenYear" | "dividendYield" | "dividendChangePercent";
+
+const EMPTY_RETURNS: Pick<MoverQuote, ReturnFields> = {
+  oneMonth: null, oneYear: null, threeYear: null, fiveYear: null, tenYear: null,
+  dividendYield: null, dividendChangePercent: null,
+};
 
 const EXCHANGES = [
   { code: "OSL", label: "Oslo" },
@@ -56,6 +67,15 @@ function fmtTime(d: Date): string {
 function fmtGrowth(v: number | null | undefined): string {
   if (v === null || v === undefined || isNaN(v)) return "—";
   return (v >= 0 ? "+" : "") + Math.round(v) + "%";
+}
+
+function fmtYield(v: number | null | undefined): string {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return v.toFixed(1) + "%";
+}
+
+function signClass(v: number | null): string {
+  return v !== null && v >= 0 ? "pos" : v !== null ? "neg" : "";
 }
 
 type MoverTab = "gainers" | "losers";
@@ -110,7 +130,7 @@ function MoverPanel({ title, tabKey, accent, quotes, loading, error, lastUpdated
       {error && <div className="box-error">{error}</div>}
 
       <div className="box-table-wrap">
-        <table className="box-table">
+        <table className="box-table movers-table">
           <thead>
             <tr>
               <th className="box-col-fav" />
@@ -124,6 +144,9 @@ function MoverPanel({ title, tabKey, accent, quotes, loading, error, lastUpdated
               <th className="box-col-pct sortable" onClick={() => handleSort("changePercent")}>
                 Endring %<span className="sort-ind">{ind("changePercent")}</span>
               </th>
+              <th className="box-col-pct mover-col-mid sortable" onClick={() => handleSort("oneMonth")}>
+                Måned<span className="sort-ind">{ind("oneMonth")}</span>
+              </th>
               <th className="box-col-pct sortable" onClick={() => handleSort("oneYear")}>
                 1 år<span className="sort-ind">{ind("oneYear")}</span>
               </th>
@@ -133,12 +156,21 @@ function MoverPanel({ title, tabKey, accent, quotes, loading, error, lastUpdated
               <th className="box-col-pct sortable" onClick={() => handleSort("fiveYear")}>
                 5 år<span className="sort-ind">{ind("fiveYear")}</span>
               </th>
+              <th className="box-col-pct mover-col-mid sortable" onClick={() => handleSort("tenYear")}>
+                10 år<span className="sort-ind">{ind("tenYear")}</span>
+              </th>
+              <th className="box-col-pct mover-col-wide sortable" onClick={() => handleSort("dividendYield")}>
+                Utbytte %<span className="sort-ind">{ind("dividendYield")}</span>
+              </th>
+              <th className="box-col-pct mover-col-wide sortable" onClick={() => handleSort("dividendChangePercent")}>
+                Endr. utbytte<span className="sort-ind">{ind("dividendChangePercent")}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 && !loading && (
               <tr>
-                <td colSpan={8} className="box-empty">
+                <td colSpan={12} className="box-empty">
                   {error ? "Klarte ikke hente data." : "Ingen data."}
                 </td>
               </tr>
@@ -170,15 +202,13 @@ function MoverPanel({ title, tabKey, accent, quotes, loading, error, lastUpdated
                   <td className={`box-col-pct ${pos ? "pos" : "neg"}`}>
                     {pos ? "+" : ""}{isNaN(q.changePercent) ? "—" : q.changePercent.toFixed(2)}%
                   </td>
-                  <td className={`box-col-pct ${q.oneYear !== null && q.oneYear >= 0 ? "pos" : q.oneYear !== null ? "neg" : ""}`}>
-                    {fmtGrowth(q.oneYear)}
-                  </td>
-                  <td className={`box-col-pct ${q.threeYear !== null && q.threeYear >= 0 ? "pos" : q.threeYear !== null ? "neg" : ""}`}>
-                    {fmtGrowth(q.threeYear)}
-                  </td>
-                  <td className={`box-col-pct ${q.fiveYear !== null && q.fiveYear >= 0 ? "pos" : q.fiveYear !== null ? "neg" : ""}`}>
-                    {fmtGrowth(q.fiveYear)}
-                  </td>
+                  <td className={`box-col-pct mover-col-mid ${signClass(q.oneMonth)}`}>{fmtGrowth(q.oneMonth)}</td>
+                  <td className={`box-col-pct ${signClass(q.oneYear)}`}>{fmtGrowth(q.oneYear)}</td>
+                  <td className={`box-col-pct ${signClass(q.threeYear)}`}>{fmtGrowth(q.threeYear)}</td>
+                  <td className={`box-col-pct ${signClass(q.fiveYear)}`}>{fmtGrowth(q.fiveYear)}</td>
+                  <td className={`box-col-pct mover-col-mid ${signClass(q.tenYear)}`}>{fmtGrowth(q.tenYear)}</td>
+                  <td className="box-col-pct mover-col-wide">{fmtYield(q.dividendYield)}</td>
+                  <td className={`box-col-pct mover-col-wide ${signClass(q.dividendChangePercent)}`}>{fmtGrowth(q.dividendChangePercent)}</td>
                 </tr>
               );
             })}
@@ -206,8 +236,8 @@ export default function MoversDashboard() {
           const res = await fetch(`${base}/api/yahoo/all-quotes?exchange=${ex.code}`);
           if (!res.ok) throw new Error(`${ex.label}: API error ${res.status}`);
           const data = await res.json();
-          return ((data.quotes ?? []) as Omit<MoverQuote, "exchange" | "oneYear" | "threeYear" | "fiveYear">[])
-            .map(q => ({ ...q, exchange: ex.code, oneYear: null, threeYear: null, fiveYear: null }));
+          return ((data.quotes ?? []) as Omit<MoverQuote, "exchange" | ReturnFields>[])
+            .map(q => ({ ...q, exchange: ex.code, ...EMPTY_RETURNS }));
         })
       );
 
@@ -222,7 +252,7 @@ export default function MoversDashboard() {
 
       const valid = merged.filter(q => !isNaN(q.changePercent));
 
-      // Only fetch 1y/3y/5y growth for the symbols that actually make the top/bottom
+      // Only fetch historical growth/dividend for the symbols that actually make the top/bottom
       // lists — not the whole cross-market universe — since each symbol costs its own
       // Yahoo chart request on the backend.
       const gainerSymbols = [...valid].sort((a, b) => b.changePercent - a.changePercent).slice(0, TOP_N).map(q => q.symbol);
@@ -238,9 +268,9 @@ export default function MoversDashboard() {
             for (const q of valid) {
               const ret = returnsBySymbol.get(q.symbol) as any;
               if (ret) {
-                q.oneYear = ret.oneYear ?? null;
-                q.threeYear = ret.threeYear ?? null;
-                q.fiveYear = ret.fiveYear ?? null;
+                for (const key of Object.keys(EMPTY_RETURNS) as ReturnFields[]) {
+                  q[key] = ret[key] ?? null;
+                }
               }
             }
           }
