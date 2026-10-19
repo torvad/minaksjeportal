@@ -48,9 +48,9 @@ export default function CurrencyBar() {
   return (
     <div className="currency-bar" aria-label="Valutakurser mot NOK">
       {rates.map(r => {
-        // Seen from NOK: green when NOK strengthened — the currency costs fewer
-        // kroner than at the previous close. Same in bergen-maritime-leads.
-        const pos = r.changePercent <= 0;
+        // Green when the currency strengthened against NOK — it costs more
+        // kroner than at the previous close.
+        const pos = r.changePercent >= 0;
         return (
           <span className="currency-item" key={r.base} title={`${r.name} → NOK`}>
             <span className="currency-code">{r.base}</span>
