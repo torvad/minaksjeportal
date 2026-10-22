@@ -19,3 +19,14 @@
   margin-left: 3px;
   opacity: 0.75;
 }
+
+/* ── Credit ── */
+.app-credit {
+  position: fixed;
+  left: 12px;
+  bottom: 8px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  z-index: 10;
+}
