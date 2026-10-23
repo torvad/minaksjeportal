@@ -35,6 +35,15 @@ const FX_PAIRS = [
   { symbol: "DKKNOK=X", base: "DKK", name: "Danske kroner" },
 ];
 
+// Headline index for each Nordic exchange.
+const INDEX_SYMBOLS = [
+  { symbol: "OSEBX.OL", code: "OSEBX", name: "Oslo Børs hovedindeks" },
+  { symbol: "^OMX", code: "OMXS30", name: "Stockholm OMXS30" },
+  { symbol: "^OMXC25", code: "OMXC25", name: "København OMXC25" },
+  { symbol: "^OMXH25", code: "OMXH25", name: "Helsinki OMXH25" },
+  { symbol: "^OMXI15", code: "OMXI15", name: "Reykjavik OMXI15" },
+];
+
 const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 const EXCHANGE_REGION: Record<string, string> = {
@@ -706,6 +715,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: "object", properties: {}, required: [] }
     },
     {
+      name: "get_index_quotes",
+      description: "Returns the headline index for each Nordic exchange (OSEBX, OMXS30, OMXC25, OMXH25, OMXI15) with intraday change.",
+      inputSchema: { type: "object", properties: {}, required: [] }
+    },
+    {
       name: "get_quotes_by_symbols",
       description: "Fetches real-time quotes for an arbitrary list of Yahoo Finance symbols (e.g. for a watchlist).",
       inputSchema: {
@@ -982,6 +996,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     });
     return {
       content: [{ type: "text", text: JSON.stringify({ rates, fetchedAt: Date.now() }, null, 2) }]
+    };
+  }
+
+  if (name === "get_index_quotes") {
+    const raw = await fetchQuotesForSymbols(INDEX_SYMBOLS.map(i => i.symbol));
+    const bySymbol = new Map(raw.map((q: any) => [q.symbol, q]));
+    const indices = INDEX_SYMBOLS.map(i => {
+      const q = (bySymbol.get(i.symbol) ?? {}) as any;
+      return {
+        code: i.code,
+        name: i.name,
+        price: (q.regularMarketPrice as number) ?? null,
+        change: (q.regularMarketChange as number) ?? 0,
+        changePercent: (q.regularMarketChangePercent as number) ?? 0,
+      };
+    });
+    return {
+      content: [{ type: "text", text: JSON.stringify({ indices, fetchedAt: Date.now() }, null, 2) }]
     };
   }
 

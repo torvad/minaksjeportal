@@ -9,6 +9,7 @@ import Favorites from "./Favorites";
 import FavoriteStar from "./FavoriteStar";
 import MoversDashboard from "./MoversDashboard";
 import CurrencyBar from "./CurrencyBar";
+import IndexBar from "./IndexBar";
 import { FavoritesProvider } from "../context/FavoritesContext";
 import { useSortableData } from "../hooks/useSortableData";
 
@@ -181,7 +182,10 @@ export default function StockDashboard() {
             <img className="dashboard-logo" src="/favicon.svg" alt="" width={28} height={28} />
             <h1 className="dashboard-title">Minaksjeportal</h1>
           </div>
-          <CurrencyBar />
+          <div className="header-tickers">
+            <CurrencyBar />
+            <IndexBar />
+          </div>
           <nav className="exchange-tabs">
             <button
               className={`exchange-tab dashboard-tab${view === "dashboard" ? " active" : ""}`}
