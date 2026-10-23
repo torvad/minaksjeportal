@@ -37,11 +37,11 @@ const FX_PAIRS = [
 
 // Headline index for each Nordic exchange.
 const INDEX_SYMBOLS = [
-  { symbol: "OSEBX.OL", code: "OSEBX", name: "Oslo Børs hovedindeks" },
-  { symbol: "^OMX", code: "OMXS30", name: "Stockholm OMXS30" },
-  { symbol: "^OMXC25", code: "OMXC25", name: "København OMXC25" },
-  { symbol: "^OMXH25", code: "OMXH25", name: "Helsinki OMXH25" },
-  { symbol: "^OMXI15", code: "OMXI15", name: "Reykjavik OMXI15" },
+  { symbol: "OSEBX.OL", code: "NO", name: "Oslo Børs hovedindeks (OSEBX)" },
+  { symbol: "^OMX", code: "SE", name: "Stockholm (OMXS30)" },
+  { symbol: "^OMXC25", code: "DK", name: "København (OMXC25)" },
+  { symbol: "^OMXH25", code: "FI", name: "Helsinki (OMXH25)" },
+  { symbol: "^OMXI15", code: "IS", name: "Reykjavik (OMXI15)" },
 ];
 
 const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
