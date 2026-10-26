@@ -43,6 +43,29 @@ app.use("/api/", apiLimiter);
 
 app.use(express.json());
 
+// Short in-memory cache for the Yahoo proxy: crawlers and many visitors hit
+// the same few URLs, and every miss is a slow upstream Yahoo call. Prices
+// need to stay fresh, so the TTL is minutes, not hours. Only successful
+// JSON responses are kept, keyed by the full URL (query string included).
+const API_CACHE_TTL_MS = 5 * 60 * 1000;
+const apiCache = new Map<string, { expires: number; body: unknown }>();
+
+app.use("/api/yahoo/", (req: Request, res: Response, next) => {
+  if (req.method !== "GET") return next();
+  const key = req.originalUrl;
+  const hit = apiCache.get(key);
+  if (hit && hit.expires > Date.now()) return res.json(hit.body);
+  const json = res.json.bind(res);
+  res.json = (body: unknown) => {
+    if (res.statusCode === 200) {
+      if (apiCache.size > 500) apiCache.clear();
+      apiCache.set(key, { expires: Date.now() + API_CACHE_TTL_MS, body });
+    }
+    return json(body);
+  };
+  next();
+});
+
 app.use(express.static(path.join(__dirname, "../../../frontend/dist")));
 
 const VALID_EXCHANGES = new Set(["OSL", "STO", "CSE", "HEL", "ICE"]);

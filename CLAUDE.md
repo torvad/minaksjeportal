@@ -23,3 +23,9 @@ Exchanges: OSL (Oslo), STO (Stockholm), CSE (København), HEL (Helsinki), ICE (R
 ## Workflow
 - When asked to "deploy" the app, also commit and push the changes to GitHub (origin/main) as part of the same request — don't wait for a separate ask.
 - Run the test suite (frontend + backend) before deploying.
+
+## Traffic and quotas
+Most traffic is crawlers, and every uncached API call is a slow upstream Yahoo request.
+- backend/api/src/server.ts caches successful GET /api/yahoo/* JSON responses in memory for 5 minutes, keyed by full URL. New Yahoo routes get this automatically; keep the TTL short since prices must stay fresh.
+- frontend/public/robots.txt blocks known AI/scraper bots, /api/ and every URL with a query string (/*?).
+- The rate limiter (60 req/min per IP on /api/) stays as the last line of defence.
