@@ -5,7 +5,7 @@ function App() {
   return (
     <div className="App">
       <StockDashboard />
-      <div className="app-credit">Drives av Torstein Vadla</div>
+      <a className="app-credit" href="/om/">Drives av Torstein Vadla</a>
     </div>
   );
 }
