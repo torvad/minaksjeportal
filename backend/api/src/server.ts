@@ -10,6 +10,11 @@ import { Orchestrator } from "./orchestrator.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 const app = express();
+// The API runs behind the host's reverse proxy; without this every visitor
+// shares the proxy's IP and the rate limiter below is one global bucket.
+// Set TRUST_PROXY=0 if the server is ever exposed directly, otherwise
+// clients could spoof X-Forwarded-For to dodge the limit.
+app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
 const PORT = process.env.PORT || 4001;
 
 let orchestrator: Orchestrator | null = null;
@@ -46,20 +51,64 @@ app.use(express.json());
 // Short in-memory cache for the Yahoo proxy: crawlers and many visitors hit
 // the same few URLs, and every miss is a slow upstream Yahoo call. Prices
 // need to stay fresh, so the TTL is minutes, not hours. Only successful
-// JSON responses are kept, keyed by the full URL (query string included).
+// JSON responses are kept. The key is built from the path plus the query
+// params the routes actually read, so junk params (?x=1, ?x=2, ...) can't
+// force a fresh upstream call per request.
 const API_CACHE_TTL_MS = 5 * 60 * 1000;
+const API_CACHE_MAX = 500;
+const CACHE_KEY_PARAMS = ["exchange", "type", "symbols"];
 const apiCache = new Map<string, { expires: number; body: unknown }>();
+// Requests for a key that is already being fetched wait for that fetch
+// instead of each firing their own Yahoo call. Resolves to undefined when
+// the fetch didn't produce a cacheable response.
+const inFlight = new Map<string, Promise<unknown>>();
 
-app.use("/api/yahoo/", (req: Request, res: Response, next) => {
+function apiCacheKey(req: Request): string {
+  const params = CACHE_KEY_PARAMS.filter((p) => typeof req.query[p] === "string")
+    .map((p) => `${p}=${req.query[p]}`);
+  return req.baseUrl + req.path + (params.length ? `?${params.join("&")}` : "");
+}
+
+function apiCacheSet(key: string, body: unknown) {
+  apiCache.delete(key);
+  // Map keeps insertion order, so the first key is the oldest entry.
+  while (apiCache.size >= API_CACHE_MAX) {
+    apiCache.delete(apiCache.keys().next().value as string);
+  }
+  apiCache.set(key, { expires: Date.now() + API_CACHE_TTL_MS, body });
+}
+
+app.use("/api/yahoo/", async (req: Request, res: Response, next) => {
   if (req.method !== "GET") return next();
-  const key = req.originalUrl;
+  const key = apiCacheKey(req);
   const hit = apiCache.get(key);
   if (hit && hit.expires > Date.now()) return res.json(hit.body);
+
+  const pending = inFlight.get(key);
+  if (pending) {
+    const body = await pending;
+    if (body !== undefined) return res.json(body);
+    return next();
+  }
+
+  let settle!: (body: unknown) => void;
+  inFlight.set(key, new Promise((resolve) => { settle = resolve; }));
+  let settled = false;
+  const finish = (body: unknown) => {
+    if (settled) return;
+    settled = true;
+    inFlight.delete(key);
+    settle(body);
+  };
+  res.on("close", () => finish(undefined));
+
   const json = res.json.bind(res);
   res.json = (body: unknown) => {
     if (res.statusCode === 200) {
-      if (apiCache.size > 500) apiCache.clear();
-      apiCache.set(key, { expires: Date.now() + API_CACHE_TTL_MS, body });
+      apiCacheSet(key, body);
+      finish(body);
+    } else {
+      finish(undefined);
     }
     return json(body);
   };
